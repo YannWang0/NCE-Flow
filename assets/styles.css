@@ -401,6 +401,32 @@ body{
 @media (max-width: 768px){
   .auto-continue-card{gap:2px; padding:3px;}
   .auto-continue-option label{padding:5px 8px; font-size:11px;}
+
+  /* 播完后选项：2x2网格布局 */
+  #afterPlayCard{
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto;
+    gap:4px;
+    padding:4px;
+    width:100%;
+    flex-wrap:nowrap;
+  }
+  #afterPlayCard .auto-continue-option{
+    width:100%;
+    display:flex;
+  }
+  #afterPlayCard .auto-continue-option label{
+    width:100%;
+    text-align:center;
+    padding:8px 6px;
+    font-size:12px;
+  }
+
+  /* 播完后的settings-group垂直居中 */
+  .settings-group:has(#afterPlayCard){
+    align-items:center;
+  }
 }
 
 /* Audio */
@@ -562,6 +588,26 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 .settings-panel .back-inline{height:28px; padding:0 10px}
 .settings-panel .auto-continue-card{height:auto; padding:6px}
 .settings-panel .auto-continue-option label{padding:6px 10px}
+
+/* After-Play options: inline segmented control with short labels */
+#afterPlayCard{
+  display:inline-flex;
+  flex-direction:row;
+  align-items:center;
+  gap:4px;
+  height:auto;
+  padding:6px;
+  width:auto;
+  flex-wrap:wrap; /* 极小屏允许换行但保持整齐 */
+}
+#afterPlayCard .auto-continue-option label{
+  display:block;
+  white-space:nowrap;
+  text-align:center;
+  min-height:0;
+  padding:6px 10px;
+  width:auto;
+}
 
 /* Hide overflow-prone inline controls on small screens (defensive) */
 @media (max-width: 560px){
