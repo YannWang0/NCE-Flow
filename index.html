@@ -6,8 +6,17 @@
   <link rel="icon" href="favicon.ico">
   <title>NCE Flow · 课本导航</title>
   <link rel="stylesheet" href="assets/styles.css">
-<script>
+
+  <!--  Microsoft Clarity 统计代码 -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "tvjv632zgs");
   </script>
+  <!--  Microsoft Clarity 代码结束 -->
+
   <script src="assets/app.js" defer></script>
   <script defer>
     document.addEventListener('DOMContentLoaded',()=>{
@@ -69,7 +78,6 @@
         const lessons = data[num]||[];
         const favs = getFavs();
 
-        // Last seen
         try{
           const recRaw = JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');
           const rec = recRaw.filter(x=>typeof x?.id==='string' && x.id.startsWith(book+'/'))
@@ -78,7 +86,6 @@
             const i = lessons.findIndex(l=>`${book}/${l.filename}`===rec.id);
             if (i>=0) {
               const lesson = lessons[i];
-              // read last pos if exists
               let posTxt = '';
               try{
                 const map = JSON.parse(localStorage.getItem('nce_lastpos')||'{}');
@@ -87,7 +94,6 @@
                   const num = parseInt(book.replace('NCE',''))||1;
                   const lessonNumber = num===1 ? `${i*2+1}&${i*2+2}` : String(i+1);
                   const tt = (lp.t>=0)? fmtTime(lp.t) : '';
-                  // Minimal: show lesson number + time only
                   posTxt = [ `第${lessonNumber}课`, tt ].filter(Boolean).join(' · ');
                 }
               }catch(_){ }
@@ -112,7 +118,6 @@
           }
         }catch(_){}
 
-        // Main list - 不要覆盖整个container，因为里面包含历史播放区域
         const existingGrid = container.querySelector('.lessons-grid');
         if (existingGrid) {
           existingGrid.innerHTML = lessons.map((l,i)=> itemHTML(book, l, i, favs)).join('');
@@ -126,20 +131,17 @@
       window.addEventListener('hashchange',load, { passive: true });
       NCE_APP.initSegmented(document);
 
-        // 全局函数：添加/移除收藏
       window.toggleFav = function(id) {
         if (!id) return;
         const favs = getFavs();
         if (favs.has(id)) favs.delete(id); else favs.add(id);
         saveFavs(favs);
-        // 重新渲染以更新状态
         (async()=>{
           const res=await fetch('static/data.json');
           const data=await res.json();
           render(data);
         })();
       };
-      // last seen: set resume flag before navigation
       document.addEventListener('click', (e)=>{
         const a = e.target.closest('#lastSeenLink');
         if (!a) return;
@@ -149,6 +151,7 @@
       load();
     });
   </script>
+
   <style>
     .tabs{display:flex;gap:6px;justify-content:center;margin:8px 0}
   </style>
