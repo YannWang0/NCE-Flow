@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="favicon.ico">
-  <title>NCE Flow · 课本导航</title>
+  <title>NCE Flow</title>
   <link rel="stylesheet" href="assets/styles.css">
 
   <!--  Microsoft Clarity 统计代码 -->
@@ -73,7 +73,7 @@
       function render(data){
         const book = getBook();
         const num = parseInt(book.replace('NCE','')) || 1;
-        header.textContent = `新概念英语第${['一','二','三','四'][num-1]}册`;
+        // header.textContent = `新概念英语第${['一','二','三','四'][num-1]}册`;
         activeTab(book);
         const lessons = data[num]||[];
         const favs = getFavs();
@@ -107,7 +107,7 @@
                       <div class="lesson-title">${lesson.title}</div>
                       ${posTxt?`<div style="font-size:13px;color:var(--muted);margin-top:4px">${posTxt}</div>`:''}
                     </div>
-                    <div style="flex:0 0 auto;width:20px;height:20px;color:var(--accent);display:flex;align-items:center;justify-content:center">→</div>
+                    <div style="flex:0 0 auto;width:20px;height:20px;color:var(--text);display:flex;align-items:center;justify-content:center">→</div>
                   </a>`;
               }
             } else {
@@ -157,10 +157,10 @@
   </style>
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
   <div class="container">
     <header class="hero">
-      <div class="brand">NCE Flow</div>
-      <h1 id="bookTitle">新概念英语</h1>
+      <h1 id="bookTitle">NCE Flow</h1>
       <p class="subtitle">简约 · 高效 · 专注</p>
       <div class="seg-wrap">
         <div class="segmented tabs" role="tablist" aria-label="册别">
@@ -184,8 +184,90 @@
       </p>
       <p class="byline">Designed &amp; Maintained by <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">Luzhenhua</a></p>
       <p class="thanks">Thanks to iChochy</p>
-      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">v1.3.3</a></p>
+      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">v1.4.0</a></p>
     </footer>
   </div>
+
+  <script>
+    // Particle Background Animation
+    (function(){
+      const cvs = document.getElementById('bg-canvas');
+      if (!cvs) return;
+
+      const ctx = cvs.getContext('2d'),
+            dpr = window.devicePixelRatio || 1;
+      let w, h, particles = [];
+
+      function resize(){
+        w = cvs.width  = innerWidth  * dpr;
+        h = cvs.height = innerHeight * dpr;
+        ctx.scale(dpr, dpr);
+        cvs.style.width  = innerWidth  + 'px';
+        cvs.style.height = innerHeight + 'px';
+      }
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor(){
+          this.x = Math.random() * innerWidth;
+          this.y = Math.random() * innerHeight;
+          this.vx = (Math.random() - .5) * .3;
+          this.vy = (Math.random() - .5) * .3;
+          this.r = Math.random() * 1.2 + .5;
+        }
+        update(){
+          this.x += this.vx;
+          this.y += this.vy;
+          if(this.x < 0 || this.x > innerWidth) this.vx *= -1;
+          if(this.y < 0 || this.y > innerHeight) this.vy *= -1;
+        }
+        draw(){
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+          ctx.fillStyle = isDark() ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
+          ctx.fill();
+        }
+      }
+
+      function isDark(){
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+
+      function drawLines(){
+        for(let i=0;i<particles.length;i++){
+          for(let j=i+1;j<particles.length;j++){
+            const dx = particles[i].x - particles[j].x,
+                  dy = particles[i].y - particles[j].y,
+                  dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 100){
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = isDark()
+                ? `rgba(255,255,255,${1-dist/100})`
+                : `rgba(0,0,0,${.5-dist/200})`;
+              ctx.lineWidth = .5;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function init(){
+        resize();
+        particles = Array.from({length: Math.floor(innerWidth*innerHeight/18000)}, ()=>new Particle());
+        animate();
+      }
+
+      function animate(){
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        particles.forEach(p=>{p.update();p.draw();});
+        drawLines();
+        requestAnimationFrame(animate);
+      }
+
+      init();
+    })();
+  </script>
 </body>
 </html>
