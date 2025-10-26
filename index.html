@@ -22,34 +22,65 @@
   <!-- 主题切换逻辑 - 使用 class-based 方法，与 mibiao.html 相同 -->
   <script>
     (function() {
-      if (!window.matchMedia) return;
+      console.log('[主题切换] 脚本开始执行');
+
+      if (!window.matchMedia) {
+        console.error('[主题切换] window.matchMedia 不支持');
+        return;
+      }
 
       const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      console.log('[主题切换] 媒体查询创建成功，当前系统主题:', colorSchemeQuery.matches ? '深色' : '浅色');
 
       const applyTheme = function(isDark) {
+        console.log('[主题切换] applyTheme 被调用，参数 isDark:', isDark);
+        console.log('[主题切换] 当前 body.classList:', Array.from(document.body.classList));
+
         // 移除所有主题 class
         document.body.classList.remove('dark-theme', 'light-theme');
+        console.log('[主题切换] 移除旧主题后 classList:', Array.from(document.body.classList));
+
         // 添加对应的主题 class
         if (isDark) {
           document.body.classList.add('dark-theme');
+          console.log('[主题切换] 添加深色主题 class');
         } else {
           document.body.classList.add('light-theme');
+          console.log('[主题切换] 添加浅色主题 class');
         }
+
+        console.log('[主题切换] 最终 body.classList:', Array.from(document.body.classList));
+        console.log('[主题切换] body.className:', document.body.className);
+
+        // 检查 CSS 变量是否生效
+        const bgColor = getComputedStyle(document.body).getPropertyValue('--bg');
+        console.log('[主题切换] 当前 --bg 变量值:', bgColor);
       };
 
       // 立即应用当前主题
+      console.log('[主题切换] 准备立即应用主题');
       applyTheme(colorSchemeQuery.matches);
+      console.log('[主题切换] 初始主题应用完成');
 
       // 监听主题变化
       const handleChange = function(e) {
+        console.log('[主题切换] 系统主题变化事件触发！');
+        console.log('[主题切换] 事件对象:', e);
+        console.log('[主题切换] 新的主题:', e.matches ? '深色' : '浅色');
         applyTheme(e.matches);
       };
 
       if (colorSchemeQuery.addEventListener) {
         colorSchemeQuery.addEventListener('change', handleChange);
+        console.log('[主题切换] 使用 addEventListener 监听主题变化');
       } else if (colorSchemeQuery.addListener) {
         colorSchemeQuery.addListener(handleChange);
+        console.log('[主题切换] 使用 addListener 监听主题变化');
+      } else {
+        console.error('[主题切换] 无法监听主题变化事件');
       }
+
+      console.log('[主题切换] 脚本执行完成');
     })();
   </script>
 
