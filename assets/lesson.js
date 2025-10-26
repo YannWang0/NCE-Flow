@@ -1429,17 +1429,43 @@
 
   init();
 
-  // 监听系统主题变化并强制重绘
+  // 监听系统主题变化并手动更新 CSS 变量
   if (window.matchMedia) {
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleColorSchemeChange = () => {
-      // 强制重绘body和所有元素
-      document.body.style.opacity = '0.9999';
-      requestAnimationFrame(() => {
-        document.body.style.opacity = '';
-      });
+
+    const applyTheme = (isDark) => {
+      const root = document.documentElement;
+      if (isDark) {
+        // 深色模式
+        root.style.setProperty('--bg', '#09090b');
+        root.style.setProperty('--surface', '#18181b');
+        root.style.setProperty('--card', '#18181b');
+        root.style.setProperty('--text', '#fafafa');
+        root.style.setProperty('--muted', '#a1a1aa');
+        root.style.setProperty('--border', '#27272a');
+        root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.3)');
+        root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.5)');
+      } else {
+        // 浅色模式
+        root.style.setProperty('--bg', '#ffffff');
+        root.style.setProperty('--surface', '#ffffff');
+        root.style.setProperty('--card', '#ffffff');
+        root.style.setProperty('--text', '#09090b');
+        root.style.setProperty('--muted', '#71717a');
+        root.style.setProperty('--border', '#e4e4e7');
+        root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.1)');
+        root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.15)');
+      }
     };
-    // 使用 addListener 兼容老版本Safari，同时也添加新的 addEventListener
+
+    const handleColorSchemeChange = (e) => {
+      applyTheme(e.matches);
+    };
+
+    // 初始化应用主题
+    applyTheme(colorSchemeQuery.matches);
+
+    // 监听变化
     if (colorSchemeQuery.addEventListener) {
       colorSchemeQuery.addEventListener('change', handleColorSchemeChange);
     } else if (colorSchemeQuery.addListener) {
