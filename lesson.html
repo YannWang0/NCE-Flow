@@ -15,6 +15,52 @@
 </script>
   <script src="assets/app.js" defer></script>
   <script src="assets/lesson.js" defer></script>
+
+  <!-- 主题切换逻辑 - 立即执行，确保最早应用 -->
+  <script>
+    (function() {
+      if (!window.matchMedia) return;
+
+      const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = function(isDark) {
+        const root = document.documentElement;
+        if (isDark) {
+          root.style.setProperty('--bg', '#09090b');
+          root.style.setProperty('--surface', '#18181b');
+          root.style.setProperty('--card', '#18181b');
+          root.style.setProperty('--text', '#fafafa');
+          root.style.setProperty('--muted', '#a1a1aa');
+          root.style.setProperty('--border', '#27272a');
+          root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.3)');
+          root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.5)');
+        } else {
+          root.style.setProperty('--bg', '#ffffff');
+          root.style.setProperty('--surface', '#ffffff');
+          root.style.setProperty('--card', '#ffffff');
+          root.style.setProperty('--text', '#09090b');
+          root.style.setProperty('--muted', '#71717a');
+          root.style.setProperty('--border', '#e4e4e7');
+          root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.1)');
+          root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.15)');
+        }
+      };
+
+      // 立即应用当前主题
+      applyTheme(colorSchemeQuery.matches);
+
+      // 监听主题变化
+      const handleChange = function(e) {
+        applyTheme(e.matches);
+      };
+
+      if (colorSchemeQuery.addEventListener) {
+        colorSchemeQuery.addEventListener('change', handleChange);
+      } else if (colorSchemeQuery.addListener) {
+        colorSchemeQuery.addListener(handleChange);
+      }
+    })();
+  </script>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>

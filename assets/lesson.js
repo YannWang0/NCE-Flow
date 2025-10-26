@@ -1428,48 +1428,4 @@
   }
 
   init();
-
-  // 监听系统主题变化并手动更新 CSS 变量
-  if (window.matchMedia) {
-    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const applyTheme = (isDark) => {
-      const root = document.documentElement;
-      if (isDark) {
-        // 深色模式
-        root.style.setProperty('--bg', '#09090b');
-        root.style.setProperty('--surface', '#18181b');
-        root.style.setProperty('--card', '#18181b');
-        root.style.setProperty('--text', '#fafafa');
-        root.style.setProperty('--muted', '#a1a1aa');
-        root.style.setProperty('--border', '#27272a');
-        root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.3)');
-        root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.5)');
-      } else {
-        // 浅色模式
-        root.style.setProperty('--bg', '#ffffff');
-        root.style.setProperty('--surface', '#ffffff');
-        root.style.setProperty('--card', '#ffffff');
-        root.style.setProperty('--text', '#09090b');
-        root.style.setProperty('--muted', '#71717a');
-        root.style.setProperty('--border', '#e4e4e7');
-        root.style.setProperty('--shadow', '0 1px 3px rgba(0,0,0,0.1)');
-        root.style.setProperty('--shadow-hover', '0 4px 12px rgba(0,0,0,0.15)');
-      }
-    };
-
-    const handleColorSchemeChange = (e) => {
-      applyTheme(e.matches);
-    };
-
-    // 初始化应用主题
-    applyTheme(colorSchemeQuery.matches);
-
-    // 监听变化
-    if (colorSchemeQuery.addEventListener) {
-      colorSchemeQuery.addEventListener('change', handleColorSchemeChange);
-    } else if (colorSchemeQuery.addListener) {
-      colorSchemeQuery.addListener(handleColorSchemeChange);
-    }
-  }
 })();
