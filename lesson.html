@@ -31,6 +31,13 @@
 
       const applyTheme = function(isDark) {
         console.log('[主题切换] applyTheme 被调用，参数 isDark:', isDark);
+
+        // 确保 body 存在
+        if (!document.body) {
+          console.error('[主题切换] document.body 不存在，无法应用主题');
+          return;
+        }
+
         console.log('[主题切换] 当前 body.classList:', Array.from(document.body.classList));
 
         // 移除所有主题 class
@@ -54,11 +61,6 @@
         console.log('[主题切换] 当前 --bg 变量值:', bgColor);
       };
 
-      // 立即应用当前主题
-      console.log('[主题切换] 准备立即应用主题');
-      applyTheme(colorSchemeQuery.matches);
-      console.log('[主题切换] 初始主题应用完成');
-
       // 监听主题变化
       const handleChange = function(e) {
         console.log('[主题切换] 系统主题变化事件触发！');
@@ -67,6 +69,7 @@
         applyTheme(e.matches);
       };
 
+      // 注册监听器
       if (colorSchemeQuery.addEventListener) {
         colorSchemeQuery.addEventListener('change', handleChange);
         console.log('[主题切换] 使用 addEventListener 监听主题变化');
@@ -75,6 +78,20 @@
         console.log('[主题切换] 使用 addListener 监听主题变化');
       } else {
         console.error('[主题切换] 无法监听主题变化事件');
+      }
+
+      // 等待 DOM 加载后立即应用主题
+      if (document.readyState === 'loading') {
+        console.log('[主题切换] DOM 正在加载，等待 DOMContentLoaded');
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('[主题切换] DOMContentLoaded 触发，准备应用主题');
+          applyTheme(colorSchemeQuery.matches);
+          console.log('[主题切换] 初始主题应用完成');
+        });
+      } else {
+        console.log('[主题切换] DOM 已加载，立即应用主题');
+        applyTheme(colorSchemeQuery.matches);
+        console.log('[主题切换] 初始主题应用完成');
       }
 
       console.log('[主题切换] 脚本执行完成');
