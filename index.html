@@ -62,6 +62,24 @@
         // 检查 CSS 变量是否生效
         const bgColor = getComputedStyle(document.body).getPropertyValue('--bg');
         console.log('[主题切换] 当前 --bg 变量值:', bgColor);
+
+        // 强制浏览器重绘 - 多种方法组合
+        console.log('[主题切换] 开始强制重绘');
+
+        // 方法1: 修改并恢复 display
+        const originalDisplay = document.body.style.display;
+        document.body.style.display = 'none';
+        // 强制重排
+        void document.body.offsetHeight;
+        document.body.style.display = originalDisplay;
+
+        // 方法2: 触发重绘的样式修改
+        document.body.style.transform = 'translateZ(0)';
+        setTimeout(() => {
+          document.body.style.transform = '';
+        }, 0);
+
+        console.log('[主题切换] 强制重绘完成');
       };
 
       // 监听主题变化
