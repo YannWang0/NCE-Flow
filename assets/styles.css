@@ -27,6 +27,30 @@
   }
 }
 
+/* 强制深色主题 class - 优先级高于媒体查询 */
+body.dark-theme {
+  --bg: #09090b;
+  --surface: #18181b;
+  --card: #18181b;
+  --text: #fafafa;
+  --muted: #a1a1aa;
+  --border: #27272a;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* 强制浅色主题 class */
+body.light-theme {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --text: #09090b;
+  --muted: #71717a;
+  --border: #e4e4e7;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
 [hidden]{display:none !important}
