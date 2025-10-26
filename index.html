@@ -184,7 +184,7 @@
       </p>
       <p class="byline">Designed &amp; Maintained by <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">Luzhenhua</a></p>
       <p class="thanks">Thanks to iChochy</p>
-      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">v1.4.1</a></p>
+      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">v1.4.2</a></p>
     </footer>
   </div>
 
@@ -267,6 +267,24 @@
       }
 
       init();
+
+      // 监听系统主题变化并强制重绘
+      if (window.matchMedia) {
+        const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleColorSchemeChange = () => {
+          // 强制重绘body和所有元素
+          document.body.style.opacity = '0.9999';
+          requestAnimationFrame(() => {
+            document.body.style.opacity = '';
+          });
+        };
+        // 使用 addListener 兼容老版本Safari，同时也添加新的 addEventListener
+        if (colorSchemeQuery.addEventListener) {
+          colorSchemeQuery.addEventListener('change', handleColorSchemeChange);
+        } else if (colorSchemeQuery.addListener) {
+          colorSchemeQuery.addListener(handleColorSchemeChange);
+        }
+      }
     })();
   </script>
 </body>

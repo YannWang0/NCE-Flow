@@ -1428,4 +1428,22 @@
   }
 
   init();
+
+  // 监听系统主题变化并强制重绘
+  if (window.matchMedia) {
+    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleColorSchemeChange = () => {
+      // 强制重绘body和所有元素
+      document.body.style.opacity = '0.9999';
+      requestAnimationFrame(() => {
+        document.body.style.opacity = '';
+      });
+    };
+    // 使用 addListener 兼容老版本Safari，同时也添加新的 addEventListener
+    if (colorSchemeQuery.addEventListener) {
+      colorSchemeQuery.addEventListener('change', handleColorSchemeChange);
+    } else if (colorSchemeQuery.addListener) {
+      colorSchemeQuery.addListener(handleColorSchemeChange);
+    }
+  }
 })();
