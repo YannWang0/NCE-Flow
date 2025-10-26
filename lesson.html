@@ -19,100 +19,54 @@
   <!-- 主题切换逻辑 - 使用 class-based 方法，与 mibiao.html 相同 -->
   <script>
     (function() {
-      console.log('[主题切换] 脚本开始执行');
-
-      if (!window.matchMedia) {
-        console.error('[主题切换] window.matchMedia 不支持');
-        return;
-      }
+      if (!window.matchMedia) return;
 
       const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      console.log('[主题切换] 媒体查询创建成功，当前系统主题:', colorSchemeQuery.matches ? '深色' : '浅色');
 
       const applyTheme = function(isDark) {
-        console.log('[主题切换] applyTheme 被调用，参数 isDark:', isDark);
-
-        // 确保 body 存在
-        if (!document.body) {
-          console.error('[主题切换] document.body 不存在，无法应用主题');
-          return;
-        }
-
-        console.log('[主题切换] 当前 body.classList:', Array.from(document.body.classList));
+        if (!document.body) return;
 
         // 移除所有主题 class
         document.body.classList.remove('dark-theme', 'light-theme');
-        console.log('[主题切换] 移除旧主题后 classList:', Array.from(document.body.classList));
 
         // 添加对应的主题 class
         if (isDark) {
           document.body.classList.add('dark-theme');
-          console.log('[主题切换] 添加深色主题 class');
         } else {
           document.body.classList.add('light-theme');
-          console.log('[主题切换] 添加浅色主题 class');
         }
 
-        console.log('[主题切换] 最终 body.classList:', Array.from(document.body.classList));
-        console.log('[主题切换] body.className:', document.body.className);
-
-        // 检查 CSS 变量是否生效
-        const bgColor = getComputedStyle(document.body).getPropertyValue('--bg');
-        console.log('[主题切换] 当前 --bg 变量值:', bgColor);
-
-        // 强制浏览器重绘 - 多种方法组合
-        console.log('[主题切换] 开始强制重绘');
-
-        // 方法1: 修改并恢复 display
+        // 强制浏览器重绘
         const originalDisplay = document.body.style.display;
         document.body.style.display = 'none';
-        // 强制重排
         void document.body.offsetHeight;
         document.body.style.display = originalDisplay;
 
-        // 方法2: 触发重绘的样式修改
         document.body.style.transform = 'translateZ(0)';
         setTimeout(() => {
           document.body.style.transform = '';
         }, 0);
-
-        console.log('[主题切换] 强制重绘完成');
       };
 
-      // 监听主题变化
       const handleChange = function(e) {
-        console.log('[主题切换] 系统主题变化事件触发！');
-        console.log('[主题切换] 事件对象:', e);
-        console.log('[主题切换] 新的主题:', e.matches ? '深色' : '浅色');
         applyTheme(e.matches);
       };
 
       // 注册监听器
       if (colorSchemeQuery.addEventListener) {
         colorSchemeQuery.addEventListener('change', handleChange);
-        console.log('[主题切换] 使用 addEventListener 监听主题变化');
       } else if (colorSchemeQuery.addListener) {
         colorSchemeQuery.addListener(handleChange);
-        console.log('[主题切换] 使用 addListener 监听主题变化');
-      } else {
-        console.error('[主题切换] 无法监听主题变化事件');
       }
 
       // 等待 DOM 加载后立即应用主题
       if (document.readyState === 'loading') {
-        console.log('[主题切换] DOM 正在加载，等待 DOMContentLoaded');
         document.addEventListener('DOMContentLoaded', function() {
-          console.log('[主题切换] DOMContentLoaded 触发，准备应用主题');
           applyTheme(colorSchemeQuery.matches);
-          console.log('[主题切换] 初始主题应用完成');
         });
       } else {
-        console.log('[主题切换] DOM 已加载，立即应用主题');
         applyTheme(colorSchemeQuery.matches);
-        console.log('[主题切换] 初始主题应用完成');
       }
-
-      console.log('[主题切换] 脚本执行完成');
     })();
   </script>
 </head>
