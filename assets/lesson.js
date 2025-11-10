@@ -1280,7 +1280,14 @@
       }
       _lastEndAdjusted = true;
     }
-    audio.addEventListener('loadedmetadata', () => { metadataReady = true; adjustLastEndIfPossible(); });
+    audio.addEventListener('loadedmetadata', () => {
+      metadataReady = true;
+      adjustLastEndIfPossible();
+      // 重新应用保存的播放速度（某些浏览器在 load() 后会重置 playbackRate）
+      if (savedRate && audio.playbackRate !== savedRate) {
+        audio.playbackRate = savedRate;
+      }
+    });
 
     function lessonId(){ return `${book}/${base}`; }
     function touchRecent(){
