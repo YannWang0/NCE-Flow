@@ -99,6 +99,7 @@
     const FOLLOW_KEY = 'autoFollow';
     const AFTER_PLAY_KEY = 'afterPlay';
     const REVEALED_SENTENCES_KEY = 'nce_revealed_sentences';
+    const SKIP_INTRO_KEY = 'skipIntro';
 
     // 状态
     let items = [];
@@ -132,6 +133,8 @@
     let autoFollow = localStorage.getItem(FOLLOW_KEY) === 'true'; // 默认关闭自动跟随
     let afterPlay = localStorage.getItem(AFTER_PLAY_KEY) || 'none'; // 'none' | 'single' | 'all' | 'next'
     let revealedSentences = new Set(); // 听读模式下已显示的句子索引
+    let skipIntro = localStorage.getItem(SKIP_INTRO_KEY) === 'true'; // 是否跳过开头
+    let firstContentIndex = 0; // 第一句正文的索引
 
     // 兼容旧版本：从旧的 loopMode 和 autoContinue 迁移
     if (!localStorage.getItem(AFTER_PLAY_KEY)) {
@@ -175,6 +178,84 @@
       if (metadataReady) return;
       try { await once(audio, 'loadedmetadata', 5000); metadataReady = true; }
       catch (_) { /* 忽略，后续 seek 仍会尽力 */ }
+    }
+
+    // --------------------------
+    // 跳过开头：智能识别逻辑
+    // --------------------------
+    /**
+     * 判断是否应该跳过某一行（高置信度检测）
+     * @param {Object} item - 句子对象 {start, en, cn}
+     * @param {number} index - 句子索引
+     * @returns {boolean} - true 表示应该跳过
+     */
+    function shouldSkipLine(item, index) {
+      const en = item.en.trim();
+      const cn = item.cn ? item.cn.trim() : '';
+      if (!en) return true; // 空行跳过
+
+      // 规则1: 跳过 "Lesson X" + "第X课" 格式（已被解析分离）
+      if (/^Lesson\s+\d+$/i.test(en) && /^第\d+课$/.test(cn)) {
+        return true;
+      }
+
+      // 规则2: 跳过 "Listen to the tape then answer this question." (100% 置信度)
+      if (/Listen to the tape/i.test(en)) {
+        return true;
+      }
+
+      // 规则3: 跳过开头的课程标题（基于时间和内容特征）
+      // 标题特征：有中文翻译，不是问句
+      // 时间分布：标题(1.5-3s), 问题(7-15s，最早7.22s)
+      if (cn && en.length < 80 && cn.length < 80) {
+        // 情况1：时间 < 7秒 → 一定是标题，直接跳过
+        if (item.start < 7) {
+          return true;
+        }
+        // 情况2：时间 7-10秒 → 可能是标题或问题
+        // 只有不是问号结尾才跳过（保护问题）
+        if (item.start < 10 && !en.endsWith('?')) {
+          return true;
+        }
+      }
+
+      // 不跳过听力理解问题（通常以问号结尾，在 7-15 秒）
+
+      return false;
+    }
+
+    /**
+     * 找到第一句正文的索引（高置信度）
+     * @param {Array} items - 所有句子
+     * @returns {number} - 第一句正文的索引，如果无法确定则返回 0
+     */
+    function findFirstContentIndex(items) {
+      if (!items || items.length === 0) return 0;
+
+      // 只检查前 10 行，避免误判
+      const checkLimit = Math.min(10, items.length);
+      let skipCount = 0;
+
+      for (let i = 0; i < checkLimit; i++) {
+        if (shouldSkipLine(items[i], i)) {
+          skipCount++;
+        } else {
+          // 找到了第一句正文
+          // 但需要确保至少跳过了 1 行（避免误判导致什么都不跳）
+          if (skipCount > 0) {
+            console.log(`[跳过开头] 智能识别成功：跳过前 ${skipCount} 行，从索引 ${i} 开始播放`);
+            return i;
+          } else {
+            // 第一行就是正文，不跳过
+            console.log('[跳过开头] 第一行即为正文，不跳过');
+            return 0;
+          }
+        }
+      }
+
+      // 如果前 10 行都被标记为跳过，说明识别可能有问题，保守起见不跳过
+      console.log('[跳过开头] 未能确定第一句正文位置，为安全起见从头开始');
+      return 0;
     }
 
     // --------------------------
@@ -289,7 +370,15 @@
         afterPlayNextRadio.checked = afterPlay === 'next';
       }
     }
-    reflectReadMode(); reflectFollowMode(); reflectAfterPlay();
+    function reflectSkipIntro() {
+      const skipIntroOnRadio = document.getElementById('skipIntroOn');
+      const skipIntroOffRadio = document.getElementById('skipIntroOff');
+      if (skipIntroOnRadio && skipIntroOffRadio) {
+        skipIntroOnRadio.checked = skipIntro;
+        skipIntroOffRadio.checked = !skipIntro;
+      }
+    }
+    reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro();
 
     function setReadMode(mode) {
       if (!['continuous', 'single', 'listen'].includes(mode)) mode = 'continuous';
@@ -311,6 +400,15 @@
       afterPlay = mode;
       try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
       reflectAfterPlay();
+    }
+    function setSkipIntro(skip) {
+      skipIntro = !!skip;
+      try { localStorage.setItem(SKIP_INTRO_KEY, skipIntro.toString()); } catch(_) {}
+      reflectSkipIntro();
+      // 重新计算第一句正文的位置
+      if (items && items.length > 0) {
+        firstContentIndex = skipIntro ? findFirstContentIndex(items) : 0;
+      }
     }
     function updateListenModeUI() {
       const isListenMode = readMode === 'listen';
@@ -422,6 +520,12 @@
       }
     }
 
+    // 跳过开头单选按钮事件
+    const skipIntroOn = document.getElementById('skipIntroOn');
+    const skipIntroOff = document.getElementById('skipIntroOff');
+    if (skipIntroOn) skipIntroOn.addEventListener('change', () => { if (skipIntroOn.checked) setSkipIntro(true); });
+    if (skipIntroOff) skipIntroOff.addEventListener('change', () => { if (skipIntroOff.checked) setSkipIntro(false); });
+
     // 倍速
     audio.playbackRate = savedRate;
     if (speedButton) speedButton.textContent = `${savedRate.toFixed(2)}x`;
@@ -499,7 +603,7 @@
             }
           }
           if (idx < 0 && items.length > 0) {
-            playSegment(0, { manual: true });
+            playSegment(firstContentIndex, { manual: true });
           } else {
             const p = audio.play();
             if (p && p.catch) p.catch(() => {});
@@ -751,8 +855,8 @@
 
           // 其他情况：正常播放
           if (idx < 0 && items.length > 0) {
-            // 如果没有选中任何句子，从第一句开始
-            playSegment(0, { manual: true });
+            // 如果没有选中任何句子，从第一句正文开始
+            playSegment(firstContentIndex, { manual: true });
           } else {
             const p = audio.play();
             if (p && p.catch) p.catch(() => {});
@@ -766,7 +870,7 @@
       // ArrowRight 或 D - 下一句
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         e.preventDefault();
-        const nextIdx = idx < 0 ? 0 : Math.min(idx + 1, items.length - 1);
+        const nextIdx = idx < 0 ? firstContentIndex : Math.min(idx + 1, items.length - 1);
         if (nextIdx < items.length) {
           playSegment(nextIdx, { manual: true });
         }
@@ -776,7 +880,7 @@
       // ArrowLeft 或 A - 上一句
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         e.preventDefault();
-        const prevIdx = idx < 0 ? 0 : Math.max(idx - 1, 0);
+        const prevIdx = idx < 0 ? firstContentIndex : Math.max(idx - 1, 0);
         if (prevIdx >= 0) {
           playSegment(prevIdx, { manual: true });
         }
@@ -789,8 +893,8 @@
         if (idx >= 0 && idx < items.length) {
           playSegment(idx, { manual: true });
         } else if (items.length > 0) {
-          // 如果没有当前句，播放第一句
-          playSegment(0, { manual: true });
+          // 如果没有当前句，播放第一句正文
+          playSegment(firstContentIndex, { manual: true });
         }
         return;
       }
@@ -810,8 +914,8 @@
       settingsReset.addEventListener('click', ()=>{
         try{ localStorage.setItem('audioPlaybackRate', DEFAULT_RATE); }catch(_){}
         audio.playbackRate = DEFAULT_RATE;
-        setReadMode('continuous'); setFollowMode(false); setAfterPlay('none');
-        reflectReadMode(); reflectFollowMode(); reflectAfterPlay();
+        setReadMode('continuous'); setFollowMode(false); setAfterPlay('none'); setSkipIntro(false);
+        reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro();
         showNotification('已恢复默认设置');
       });
     }
@@ -1163,10 +1267,10 @@
 
     // 整体结束
     audio.addEventListener('ended', () => {
-      // 整篇循环：从第一句重新开始（连读/听读模式）
+      // 整篇循环：从第一句正文重新开始（连读/听读模式）
       if ((readMode === 'continuous' || readMode === 'listen') && afterPlay === 'all' && items.length > 0) {
         setTimeout(() => {
-          playSegment(0, { manual: true });
+          playSegment(firstContentIndex, { manual: true });
         }, 100);
         return;
       }
@@ -1317,6 +1421,9 @@
       // 更新浏览器标签页标题
       document.title = `${lessonTitle} - NCE Flow`;
 
+      // 智能识别第一句正文的位置
+      firstContentIndex = skipIntro ? findFirstContentIndex(items) : 0;
+
       render();
       touchRecent();
       adjustLastEndIfPossible();
@@ -1332,7 +1439,14 @@
           const map = JSON.parse(localStorage.getItem(LASTPOS_KEY)||'{}');
           const pos = map[resumeId];
           if (pos){
-            const targetIdx = (Number.isInteger(pos.idx) && pos.idx>=0 && pos.idx<items.length) ? pos.idx : 0;
+            let targetIdx = (Number.isInteger(pos.idx) && pos.idx>=0 && pos.idx<items.length) ? pos.idx : 0;
+
+            // 如果启用了跳过开头，且保存的位置在跳过区域内，则从第一句正文开始
+            if (skipIntro && targetIdx < firstContentIndex) {
+              targetIdx = firstContentIndex;
+              console.log(`[跳过开头] 断点恢复：保存的位置 ${pos.idx} 在跳过区域内，从索引 ${firstContentIndex} 开始播放`);
+            }
+
             audio.currentTime = Math.max(0, pos.t || 0);
             idx = targetIdx; segmentEnd = endFor(items[targetIdx]);
             highlight(targetIdx, false);
