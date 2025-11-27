@@ -374,7 +374,21 @@
       const showFooterLink = () => { if (footerInstall && !isInstalled()) footerInstall.hidden = false; };
       const hideFooterLink = () => { if (footerInstall) footerInstall.hidden = true; };
 
+      // iOS 引导界面
+      const showIOSGuide = () => {
+        el.classList.add('ios-prompt');
+        promptSub.innerHTML = '点击底部 <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> 然后选择「添加到主屏幕」';
+        installBtn.textContent = '知道了';
+        installBtn.onclick = hidePrompt;
+      };
+
       const doInstall = async () => {
+        // iOS Safari: 点击后显示引导
+        if (isIOSSafari) {
+          showIOSGuide();
+          return;
+        }
+        // Chrome/Edge: 标准安装流程
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
         const {outcome} = await deferredPrompt.userChoice;
@@ -384,11 +398,8 @@
         hideFooterLink();
       };
 
-      // iOS Safari: 显示手动引导
+      // iOS Safari: 延迟显示提示（与 Android 相同的初始界面）
       if (isIOSSafari && !isInstalled() && !isDismissed()) {
-        el.classList.add('ios-prompt');
-        promptSub.innerHTML = '点击底部 <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> 然后选择「添加到主屏幕」';
-        installBtn.style.display = 'none';
         showFooterLink();
         setTimeout(showPrompt, 2500);
       }
@@ -405,11 +416,7 @@
       if (footerInstall) {
         footerInstall.querySelector('a').addEventListener('click', e => {
           e.preventDefault();
-          if (isIOSSafari) {
-            showPrompt();
-          } else {
-            doInstall();
-          }
+          showPrompt();
         });
       }
       closeBtn.addEventListener('click', () => { localStorage.setItem(DISMISS_KEY, Date.now()); hidePrompt(); });
