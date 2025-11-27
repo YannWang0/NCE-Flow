@@ -718,6 +718,14 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 .pwa-prompt-sub{
   font-size:11px;
   color:var(--muted);
+  line-height:1.4;
+}
+.pwa-prompt-sub .ios-icon{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  vertical-align:middle;
+  margin:0 2px;
 }
 .pwa-prompt-btn{
   padding:6px 12px;
@@ -760,5 +768,21 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
   }
   .pwa-prompt-btn{
     padding:6px 10px;
+  }
+  .pwa-prompt.ios-prompt{
+    flex-direction:column;
+    align-items:stretch;
+    text-align:center;
+    padding:16px;
+  }
+  .pwa-prompt.ios-prompt .pwa-prompt-icon{
+    width:48px;
+    height:48px;
+    margin:0 auto 8px;
+  }
+  .pwa-prompt.ios-prompt .pwa-prompt-close{
+    position:absolute;
+    top:8px;
+    right:8px;
   }
 }
