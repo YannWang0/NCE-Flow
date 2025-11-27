@@ -1442,12 +1442,14 @@
             let targetIdx = (Number.isInteger(pos.idx) && pos.idx>=0 && pos.idx<items.length) ? pos.idx : 0;
 
             // 如果启用了跳过开头，且保存的位置在跳过区域内，则从第一句正文开始
+            let targetTime = Math.max(0, pos.t || 0);
             if (skipIntro && targetIdx < firstContentIndex) {
               targetIdx = firstContentIndex;
-              console.log(`[跳过开头] 断点恢复：保存的位置 ${pos.idx} 在跳过区域内，从索引 ${firstContentIndex} 开始播放`);
+              targetTime = items[firstContentIndex].start || 0;
+              console.log(`[跳过开头] 断点恢复：保存的位置 ${pos.idx} 在跳过区域内，从索引 ${firstContentIndex}（时间 ${targetTime}s）开始播放`);
             }
 
-            audio.currentTime = Math.max(0, pos.t || 0);
+            audio.currentTime = targetTime;
             idx = targetIdx; segmentEnd = endFor(items[targetIdx]);
             highlight(targetIdx, false);
             if (sessionStorage.getItem('nce_resume_play')==='1'){
