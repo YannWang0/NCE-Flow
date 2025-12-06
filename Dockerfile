@@ -16,11 +16,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY assets /usr/share/nginx/html/assets
 COPY static /usr/share/nginx/html/static
 COPY images /usr/share/nginx/html/images
+COPY icons /usr/share/nginx/html/icons
 COPY NCE1 /usr/share/nginx/html/NCE1
 COPY NCE2 /usr/share/nginx/html/NCE2
 COPY NCE3 /usr/share/nginx/html/NCE3
 COPY NCE4 /usr/share/nginx/html/NCE4
 COPY *.html /usr/share/nginx/html/
+COPY manifest.json sw.js /usr/share/nginx/html/
 COPY favicon.ico /usr/share/nginx/html/
 
 # 设置正确的权限
