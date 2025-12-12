@@ -243,11 +243,66 @@ body{
 .fav-btn svg{width:18px;height:18px;fill:currentColor}
 
 /* Lesson page */
-.toolbar{position:sticky;top:0;z-index:10;background:transparent;padding:6px 0 4px;border-bottom:none}
-.toolbar .row{display:flex;align-items:center;justify-content:flex-end;gap:10px}
-.toolbar .info{display:flex;align-items:center;gap:10px}
-.toolbar .title{font-weight:700}
-.toolbar .sub{font-size:12px;color:var(--muted)}
+.toolbar{
+  position:sticky;
+  top:env(safe-area-inset-top);
+  z-index:20;
+  padding:6px 0;
+  background:transparent;
+  border-bottom:none;
+}
+.toolbar .topbar-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:calc(10px * var(--lesson-ui-scale, 1));
+  max-width:var(--content-max);
+  margin:0 auto;
+}
+.toolbar .seg-wrap{
+  flex:1;
+  margin:0;
+  max-width:none;
+  display:flex;
+  justify-content:center;
+}
+.toolbar #langTabs.segmented.tabs{
+  margin-top:0;
+  padding:calc(4px * var(--lesson-ui-scale, 1));
+  gap:calc(3px * var(--lesson-ui-scale, 1));
+  border-radius:calc(8px * var(--lesson-ui-scale, 1));
+}
+.toolbar #langTabs.segmented.tabs .seg{
+  font-size:calc(12px * var(--lesson-ui-scale, 1));
+  padding:calc(8px * var(--lesson-ui-scale, 1)) calc(14px * var(--lesson-ui-scale, 1));
+  border-radius:calc(8px * var(--lesson-ui-scale, 1));
+}
+.toolbar .back-inline{
+  height:calc(28px * var(--lesson-ui-scale, 1));
+  padding:0 calc(10px * var(--lesson-ui-scale, 1));
+  font-size:calc(12px * var(--lesson-ui-scale, 1));
+  gap:calc(6px * var(--lesson-ui-scale, 1));
+  border-radius:calc(8px * var(--lesson-ui-scale, 1));
+  background:var(--surface);
+  box-shadow:var(--shadow);
+  border-color:var(--border);
+}
+.toolbar .back-inline svg{width:calc(14px * var(--lesson-ui-scale, 1));height:calc(14px * var(--lesson-ui-scale, 1))}
+.toolbar .back-inline:hover{
+  background:color-mix(in srgb, var(--surface) 85%, var(--bg));
+}
+@media (max-width: 480px){
+  .toolbar{padding:6px 0;}
+  .toolbar .topbar-inner{justify-content:center;}
+  .toolbar .seg-wrap{flex:0;}
+  .toolbar #langTabs.segmented.tabs .seg{
+    padding:calc(7px * var(--lesson-ui-scale, 1)) calc(12px * var(--lesson-ui-scale, 1));
+  }
+  .toolbar .back-inline{
+    height:calc(26px * var(--lesson-ui-scale, 1));
+    padding:0 calc(9px * var(--lesson-ui-scale, 1));
+  }
+}
 .controls{display:flex;align-items:center;gap:8px}
 .btn{appearance:none;border:1px solid var(--border);background:var(--surface);color:inherit;border-radius:8px;padding:6px 10px;cursor:pointer;box-shadow:var(--shadow)}
 .btn:hover{transform:translateY(-1px)}
@@ -456,6 +511,80 @@ body{
 /* Audio */
 .player{display:flex; align-items:center; gap:8px; margin:6px auto 10px; padding:0; background:transparent; border:none; box-shadow:none; min-height:var(--control-h); max-width:var(--content-max); width:100%;}
 
+/* Bottom player bar (lesson page) */
+.bottom-player-bar{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  z-index:650;
+  width:min(calc(100vw - 24px), var(--content-max));
+  padding:0;
+  background:transparent;
+  border:none;
+}
+.bottom-player-bar .player{
+  margin:0 auto;
+  max-width:none;
+  width:100%;
+}
+.bottom-player-bar .custom-player{
+  width:100%;
+  height:calc((var(--control-h) + 6px) * var(--lesson-ui-scale, 1));
+  border-radius:calc(12px * var(--lesson-ui-scale, 1));
+  padding:0 calc(14px * var(--lesson-ui-scale, 1));
+  gap:calc(8px * var(--lesson-ui-scale, 1));
+  box-shadow:var(--shadow);
+  background:var(--surface);
+  border-color:var(--border);
+}
+.bottom-player-bar .custom-player:hover{box-shadow:var(--shadow-hover);}
+.bottom-player-bar .play-btn{
+  width:calc(24px * var(--lesson-ui-scale, 1));
+  height:calc(24px * var(--lesson-ui-scale, 1));
+}
+.bottom-player-bar .play-btn svg{
+  width:calc(18px * var(--lesson-ui-scale, 1));
+  height:calc(18px * var(--lesson-ui-scale, 1));
+}
+.bottom-player-bar .time-display{
+  font-size:calc(11px * var(--lesson-ui-scale, 1));
+  min-width:calc(32px * var(--lesson-ui-scale, 1));
+}
+.bottom-player-bar .progress-container{
+  padding:0 calc(4px * var(--lesson-ui-scale, 1));
+}
+.bottom-player-bar .progress-bar{
+  height:calc(4px * var(--lesson-ui-scale, 1));
+  border-radius:calc(2px * var(--lesson-ui-scale, 1));
+}
+.bottom-player-bar .progress-bar:hover{
+  height:calc(6px * var(--lesson-ui-scale, 1));
+}
+@media (max-width: 480px){
+  .bottom-player-bar{
+    width:min(calc(100vw - 16px), var(--content-max));
+    bottom:calc(8px + env(safe-area-inset-bottom));
+  }
+  .bottom-player-bar .custom-player{
+    height:calc((var(--control-h) + 4px) * var(--lesson-ui-scale, 1));
+    border-radius:calc(10px * var(--lesson-ui-scale, 1));
+    padding:0 calc(12px * var(--lesson-ui-scale, 1));
+  }
+}
+
+/* Reserve space and lift floating UI above bottom bar */
+body.lesson-page{
+  --lesson-ui-scale:1.15;
+  --lesson-bottom-bar-h:calc(64px * var(--lesson-ui-scale));
+}
+body.lesson-page .container{
+  padding-bottom:calc(var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+}
+body.lesson-page .pwa-prompt{
+  bottom:calc(20px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+}
+
 /* Custom Audio Player */
 .custom-player{display:flex; align-items:center; gap:8px; flex:1; height:var(--control-h); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0 12px; box-shadow:var(--shadow); transition:all .2s ease;}
 .custom-player:hover{box-shadow:var(--shadow-hover);}
@@ -485,6 +614,70 @@ body{
 /* 让第一个可见按钮靠左，最后一个可见按钮靠右 */
 .btn-nav.prev{margin-right:auto}
 .btn-nav.next{margin-left:auto}
+
+/* Floating back-to-top button (lesson page) */
+.back-to-top{
+  position:fixed;
+  right:calc(18px + env(safe-area-inset-right));
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  width:44px;
+  height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:var(--shadow-hover);
+  color:var(--text);
+  cursor:pointer;
+  z-index:700;
+  opacity:0;
+  transform:translateY(10px) scale(.98);
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease, box-shadow .2s ease, background .2s ease;
+  backdrop-filter:saturate(130%) blur(8px);
+  -webkit-backdrop-filter:saturate(130%) blur(8px);
+}
+.back-to-top svg{width:18px;height:18px;}
+.back-to-top.show{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+.pwa-prompt.show + .back-to-top{
+  bottom:calc(96px + env(safe-area-inset-bottom));
+}
+body.lesson-page .back-to-top{
+  bottom:calc(18px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+}
+body.lesson-page .pwa-prompt.show + .back-to-top{
+  bottom:calc(96px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+}
+.back-to-top:hover{
+  background:color-mix(in srgb, var(--surface) 80%, transparent);
+  transform:translateY(-2px) scale(1.03);
+}
+.back-to-top:active{
+  transform:translateY(0) scale(.97);
+}
+@media (max-width: 480px){
+  .back-to-top{
+    right:calc(12px + env(safe-area-inset-right));
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    width:40px;height:40px;border-radius:10px;
+  }
+	  .pwa-prompt.show + .back-to-top{
+	    bottom:calc(86px + env(safe-area-inset-bottom));
+	  }
+	  body.lesson-page .back-to-top{
+	    bottom:calc(12px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+	  }
+	  body.lesson-page .pwa-prompt.show + .back-to-top{
+	    bottom:calc(86px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+	  }
+	  .back-to-top svg{width:17px;height:17px;}
+	}
 
 /* Footer - Modern Apple style */
 footer{

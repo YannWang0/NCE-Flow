@@ -88,13 +88,14 @@
     const settingsPanel = qs('#settingsPanel');
     const settingsClose = qs('#settingsClose');
     const settingsDone = qs('#settingsDone');
-    const prevLessonLink = qs('#prevLesson');
-    const nextLessonLink = qs('#nextLesson');
-    const speedButton = qs('#speed');
+	    const prevLessonLink = qs('#prevLesson');
+	    const nextLessonLink = qs('#nextLesson');
+	    const speedButton = qs('#speed');
+	    const backToTopBtn = qs('#backToTop');
 
-    // 本地存储键
-    const RECENT_KEY = 'nce_recents';
-    const LASTPOS_KEY = 'nce_lastpos';
+	    // 本地存储键
+	    const RECENT_KEY = 'nce_recents';
+	    const LASTPOS_KEY = 'nce_lastpos';
     const MODE_KEY = 'readMode';
     const FOLLOW_KEY = 'autoFollow';
     const AFTER_PLAY_KEY = 'afterPlay';
@@ -151,12 +152,44 @@
         afterPlay = 'none';
       }
 
-      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
-    }
+	      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
+	    }
 
-    // --------------------------
-    // iOS 解锁：首次任意交互即解锁
-    // --------------------------
+	    // --------------------------
+	    // Back to top button
+	    // --------------------------
+	    (function initBackToTop(){
+	      if (!backToTopBtn) return;
+
+	      const update = () => {
+	        const y = window.scrollY || document.documentElement.scrollTop || 0;
+	        const threshold = Math.min(320, window.innerHeight * 0.6);
+	        const show = y > threshold;
+	        backToTopBtn.classList.toggle('show', show);
+	        backToTopBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
+	        backToTopBtn.tabIndex = show ? 0 : -1;
+	      };
+
+	      let ticking = false;
+	      const onScroll = () => {
+	        if (ticking) return;
+	        ticking = true;
+	        raf(() => { ticking = false; update(); });
+	      };
+
+	      backToTopBtn.addEventListener('click', () => {
+	        try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+	        catch(_) { window.scrollTo(0, 0); }
+	      });
+
+	      window.addEventListener('scroll', onScroll, { passive: true });
+	      window.addEventListener('resize', onScroll, { passive: true });
+	      update();
+	    })();
+
+	    // --------------------------
+	    // iOS 解锁：首次任意交互即解锁
+	    // --------------------------
     function unlockAudioSync() {
       if (iosUnlocked) return;
       try {
