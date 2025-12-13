@@ -116,11 +116,18 @@
     let nextLessonHref = '';
     let _lastSavedAt = 0;
     let loopReplayPending = false;  // 标记是否正在等待循环重播
+    let playSeq = 0;               // 防止异步 seek 回调串线
 
     // iOS 特有状态
     let iosUnlocked = false;         // 是否已“解锁音频”
     let metadataReady = false;       // 是否已 loadedmetadata
     let _userVolume = Math.max(0, Math.min(1, audio.volume || 1));
+
+    // 音频 seek 兼容：当服务器不支持 Range 时，回退为 Blob URL（可在本地 http.server 正常点读）
+    let audioBlobUrl = '';
+    let audioBlobPromise = null;
+    let usingBlobSrc = false;
+    let warnedNoRange = false;
 
     // 速率
     const rates = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 0.75, 1.0];
@@ -1113,6 +1120,53 @@
       }
     }
 
+    const SEEK_OK_EPS = 0.25;
+    const SEEK_TIMEOUT_MS = isIOSLike ? 2500 : 1200;
+
+    function seekLooksOk(target, actual) {
+      if (!Number.isFinite(target) || target <= 0.5) return true;
+      return Math.abs((actual || 0) - target) <= SEEK_OK_EPS;
+    }
+
+    async function getAudioBlobUrl() {
+      if (audioBlobUrl) return audioBlobUrl;
+      if (audioBlobPromise) return await audioBlobPromise;
+      audioBlobPromise = (async () => {
+        const r = await fetch(mp3);
+        if (!r.ok) throw new Error('Fetch audio failed: ' + r.status);
+        const blob = await r.blob();
+        audioBlobUrl = URL.createObjectURL(blob);
+        return audioBlobUrl;
+      })();
+      try { return await audioBlobPromise; }
+      finally { if (!audioBlobUrl) audioBlobPromise = null; }
+    }
+
+    async function switchToBlobSource() {
+      if (usingBlobSrc) return true;
+      try {
+        const url = await getAudioBlobUrl();
+        const keepRate = audio.playbackRate || 1;
+        const keepVol = audio.volume;
+        const keepMuted = audio.muted;
+
+        metadataReady = false;
+        audio.src = url;
+        try { audio.load(); } catch(_) {}
+        await ensureMetadata();
+
+        try { audio.playbackRate = keepRate; } catch(_) {}
+        try { audio.volume = keepVol; } catch(_) {}
+        try { audio.muted = keepMuted; } catch(_) {}
+
+        usingBlobSrc = true;
+        return true;
+      } catch (e) {
+        console.error('[音频] 切换为 Blob 失败', e);
+        return false;
+      }
+    }
+
     async function playSegment(i, opts) {
       const manual = !!(opts && opts.manual);
       console.log('[循环调试] playSegment调用', {
@@ -1124,6 +1178,7 @@
       });
 
       if (i < 0 || i >= items.length) return;
+      const mySeq = ++playSeq;
 
       // 手动操作时清除循环等待标志
       if (manual && loopReplayPending) {
@@ -1161,7 +1216,7 @@
         start = Math.min(Number.isFinite(dur) ? Math.max(0, dur - 0.05) : start + eps, cur + eps);
       }
 
-      if ((readMode === 'continuous' || (readMode === 'listen' && afterPlay !== 'single')) && !audio.paused) {
+      if (!manual && (readMode === 'continuous' || (readMode === 'listen' && afterPlay !== 'single')) && !audio.paused) {
         // 连读或听读（非单句循环）：保持播放，静音→seek→(seeked/canplay)→两帧后解除静音→调度
         audio.muted = true;
         let done = false;
@@ -1177,13 +1232,43 @@
       } else {
         // 点读或听读（单句循环）/初次播放：暂停→seek→seeked 后 play（不使用固定延时）
         try { internalPause = true; audio.pause(); } catch(_) {}
-        const resume = () => {
-          audio.removeEventListener('seeked', resume);
-          const p = audio.play(); if (p && p.catch) p.catch(()=>{});
-          raf2(() => scheduleAdvance());
+        const target = start;
+        let retries = 0;
+        let blobTried = false;
+
+        const attemptSeek = async () => {
+          if (mySeq !== playSeq) return;
+          let settled = false;
+          const onDone = async () => {
+            if (settled) return;
+            settled = true;
+            audio.removeEventListener('seeked', onDone);
+            if (mySeq !== playSeq) return;
+
+            const actual = Math.max(0, audio.currentTime || 0);
+            if (!seekLooksOk(target, actual)) {
+              retries++;
+              if (retries <= 2) { attemptSeek(); return; }
+              if (!blobTried && !usingBlobSrc) {
+                blobTried = true;
+                if (!warnedNoRange) {
+                  warnedNoRange = true;
+                  showNotification('当前服务器不支持音频跳转，已切换为完整音频加载以启用点读');
+                }
+                const ok = await switchToBlobSource();
+                if (ok && mySeq === playSeq) { retries = 0; attemptSeek(); return; }
+              }
+            }
+
+            const p = audio.play(); if (p && p.catch) p.catch(()=>{});
+            raf2(() => scheduleAdvance());
+          };
+          audio.addEventListener('seeked', onDone, { once: true });
+          fastSeekTo(target);
+          setTimeout(onDone, SEEK_TIMEOUT_MS);
         };
-        audio.addEventListener('seeked', resume, { once: true });
-        fastSeekTo(start);
+
+        attemptSeek();
       }
     }
 
@@ -1499,7 +1584,7 @@
       subEl.textContent = String(err);
     });
 
-    window.addEventListener('beforeunload', ()=>{ saveLastPos(); });
+    window.addEventListener('beforeunload', ()=>{ saveLastPos(); try { if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl); } catch(_) {} });
     window.addEventListener('hashchange', () => { window.scrollTo(0, 0); location.reload(); });
   });
 })();

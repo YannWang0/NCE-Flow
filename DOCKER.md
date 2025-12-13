@@ -30,7 +30,7 @@ docker run -d --name nce-flow -p 3000:80 --restart unless-stopped luzhenhua/nce-
 
 **指定版本：**
 ```bash
-docker run -d --name nce-flow -p 8080:80 --restart unless-stopped luzhenhua/nce-flow:1.1.3
+docker run -d --name nce-flow -p 8080:80 --restart unless-stopped luzhenhua/nce-flow:1.5.1
 ```
 
 ## 其他部署方式

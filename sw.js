@@ -3,7 +3,7 @@
  * 缓存策略：核心文件缓存优先，音频网络优先
  */
 
-const CACHE_NAME = 'nce-flow-v1';
+const CACHE_NAME = 'nce-flow-v2';
 
 // 核心静态资源（预缓存）
 const PRECACHE_ASSETS = [
@@ -13,7 +13,7 @@ const PRECACHE_ASSETS = [
   '/book.html',
   '/assets/styles.css',
   '/assets/lesson.js',
-  '/assets/index.js',
+  '/assets/app.js',
   '/static/data.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
