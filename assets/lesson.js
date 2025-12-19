@@ -101,6 +101,8 @@
     const AFTER_PLAY_KEY = 'afterPlay';
     const REVEALED_SENTENCES_KEY = 'nce_revealed_sentences';
     const SKIP_INTRO_KEY = 'skipIntro';
+    const SHADOW_REPEAT_KEY = 'shadowRepeatCount';
+    const SHADOW_GAP_KEY = 'shadowGapMode';
 
     // 状态
     let items = [];
@@ -137,12 +139,26 @@
     let currentRateIndex = Math.max(0, rates.indexOf(savedRate));
 
     // 读取模式/跟随/播完后
-    let readMode = localStorage.getItem(MODE_KEY) || 'continuous'; // 'continuous' | 'single' | 'listen'
+    let readMode = localStorage.getItem(MODE_KEY) || 'continuous'; // 'continuous' | 'single' | 'listen' | 'shadow'
     let autoFollow = localStorage.getItem(FOLLOW_KEY) === 'true'; // 默认关闭自动跟随
     let afterPlay = localStorage.getItem(AFTER_PLAY_KEY) || 'none'; // 'none' | 'single' | 'all' | 'next'
     let revealedSentences = new Set(); // 听读模式下已显示的句子索引
     let skipIntro = localStorage.getItem(SKIP_INTRO_KEY) === 'true'; // 是否跳过开头
     let firstContentIndex = 0; // 第一句正文的索引
+    let shadowStartIndex = 0; // 跟读模式的正文起点
+
+    const SHADOW_GAP_RATIOS = { short: 0.8, medium: 1.0, long: 1.3 };
+    function normalizeShadowRepeat(value) {
+      const n = parseInt(value, 10);
+      if (!Number.isFinite(n)) return 2;
+      return Math.min(9, Math.max(1, n));
+    }
+    let shadowRepeatTotal = normalizeShadowRepeat(localStorage.getItem(SHADOW_REPEAT_KEY));
+    let shadowRepeatRemaining = shadowRepeatTotal;
+    let shadowGapMode = localStorage.getItem(SHADOW_GAP_KEY) || 'medium';
+    if (!Object.prototype.hasOwnProperty.call(SHADOW_GAP_RATIOS, shadowGapMode)) shadowGapMode = 'medium';
+    let shadowGapTimer = 0;
+    let shadowAutoPause = false;
 
     // 兼容旧版本：从旧的 loopMode 和 autoContinue 迁移
     if (!localStorage.getItem(AFTER_PLAY_KEY)) {
@@ -229,9 +245,10 @@
      * @param {number} index - 句子索引
      * @returns {boolean} - true 表示应该跳过
      */
-    function shouldSkipLine(item, index) {
+    function shouldSkipLine(item, index, opts = {}) {
       const en = item.en.trim();
       const cn = item.cn ? item.cn.trim() : '';
+      const skipQuestions = !!opts.skipQuestions;
       if (!en) return true; // 空行跳过
 
       // 规则1: 跳过 "Lesson X" + "第X课" 格式（已被解析分离）
@@ -259,7 +276,13 @@
         }
       }
 
-      // 不跳过听力理解问题（通常以问号结尾，在 7-15 秒）
+      // 可选：跟读模式下跳过提示问题（通常以问号结尾，在 7-15 秒）
+      const isQuestion = en.endsWith('?') || cn.endsWith('？');
+      if (skipQuestions && isQuestion && item.start < 20 && index < 6) {
+        return true;
+      }
+
+      // 默认不跳过听力理解问题
 
       return false;
     }
@@ -269,7 +292,7 @@
      * @param {Array} items - 所有句子
      * @returns {number} - 第一句正文的索引，如果无法确定则返回 0
      */
-    function findFirstContentIndex(items) {
+    function findFirstContentIndex(items, opts = {}) {
       if (!items || items.length === 0) return 0;
 
       // 只检查前 10 行，避免误判
@@ -277,7 +300,7 @@
       let skipCount = 0;
 
       for (let i = 0; i < checkLimit; i++) {
-        if (shouldSkipLine(items[i], i)) {
+        if (shouldSkipLine(items[i], i, opts)) {
           skipCount++;
         } else {
           // 找到了第一句正文
@@ -305,13 +328,16 @@
       const isContinuous = readMode === 'continuous';
       const isListen = readMode === 'listen';
       const isSingle = readMode === 'single';
+      const isShadow = readMode === 'shadow';
       const continuousRadio = document.getElementById('readModeContinuous');
       const singleRadio = document.getElementById('readModeSingle');
       const listenRadio = document.getElementById('readModeListen');
-      if (continuousRadio && singleRadio && listenRadio) {
+      const shadowRadio = document.getElementById('readModeShadow');
+      if (continuousRadio && singleRadio && listenRadio && shadowRadio) {
         continuousRadio.checked = isContinuous;
         singleRadio.checked = isSingle;
         listenRadio.checked = isListen;
+        shadowRadio.checked = isShadow;
       }
 
       // 控制播完后选项的启用/禁用状态
@@ -385,10 +411,43 @@
           afterPlayNextLabel.style.opacity = '';
           afterPlayNextLabel.style.cursor = '';
         }
+      } else if (isShadow) {
+        // 跟读模式：禁用"单句循环"（跟读已内置循环）
+        if (afterPlaySingleRadio) afterPlaySingleRadio.disabled = true;
+        if (afterPlaySingleLabel) {
+          afterPlaySingleLabel.style.opacity = '0.5';
+          afterPlaySingleLabel.style.cursor = 'not-allowed';
+        }
+        // 启用"整篇循环"和"自动下一课"
+        if (afterPlayAllRadio) afterPlayAllRadio.disabled = false;
+        if (afterPlayAllLabel) {
+          afterPlayAllLabel.style.opacity = '';
+          afterPlayAllLabel.style.cursor = '';
+        }
+        if (afterPlayNextRadio) afterPlayNextRadio.disabled = false;
+        if (afterPlayNextLabel) {
+          afterPlayNextLabel.style.opacity = '';
+          afterPlayNextLabel.style.cursor = '';
+        }
+        if (afterPlay === 'single') {
+          setAfterPlay('none');
+        }
       }
 
       // 更新听读模式的 UI
       updateListenModeUI();
+
+      const shadowSettingsGroup = document.getElementById('shadowSettingsGroup');
+      const shadowRepeatInput = document.getElementById('shadowRepeat');
+      const shadowGapShort = document.getElementById('shadowGapShort');
+      const shadowGapMedium = document.getElementById('shadowGapMedium');
+      const shadowGapLong = document.getElementById('shadowGapLong');
+      const shadowEnabled = isShadow;
+      if (shadowSettingsGroup) shadowSettingsGroup.classList.toggle('is-disabled', !shadowEnabled);
+      if (shadowRepeatInput) shadowRepeatInput.disabled = !shadowEnabled;
+      if (shadowGapShort) shadowGapShort.disabled = !shadowEnabled;
+      if (shadowGapMedium) shadowGapMedium.disabled = !shadowEnabled;
+      if (shadowGapLong) shadowGapLong.disabled = !shadowEnabled;
     }
     function reflectFollowMode() {
       const followOnRadio = document.getElementById('followOn');
@@ -418,13 +477,27 @@
         skipIntroOffRadio.checked = !skipIntro;
       }
     }
+    function reflectShadowSettings() {
+      const repeatInput = document.getElementById('shadowRepeat');
+      const gapShort = document.getElementById('shadowGapShort');
+      const gapMedium = document.getElementById('shadowGapMedium');
+      const gapLong = document.getElementById('shadowGapLong');
+      if (repeatInput) repeatInput.value = String(shadowRepeatTotal);
+      if (gapShort) gapShort.checked = shadowGapMode === 'short';
+      if (gapMedium) gapMedium.checked = shadowGapMode === 'medium';
+      if (gapLong) gapLong.checked = shadowGapMode === 'long';
+    }
     reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro();
+    reflectShadowSettings();
 
     function setReadMode(mode) {
-      if (!['continuous', 'single', 'listen'].includes(mode)) mode = 'continuous';
+      if (!['continuous', 'single', 'listen', 'shadow'].includes(mode)) mode = 'continuous';
       readMode = mode;
       try { localStorage.setItem(MODE_KEY, readMode); } catch(_) {}
       reflectReadMode();
+      clearShadowGapTimer();
+      shadowAutoPause = false;
+      if (readMode === 'shadow') shadowRepeatRemaining = shadowRepeatTotal;
       // 模式切换：清调度→按新模式刷新当前段末→重建调度
       clearAdvance(); isScheduling = false; scheduleTime = 0;
       if (idx >= 0 && idx < items.length) segmentEnd = endFor(items[idx]);
@@ -448,7 +521,20 @@
       // 重新计算第一句正文的位置
       if (items && items.length > 0) {
         firstContentIndex = skipIntro ? findFirstContentIndex(items) : 0;
+        shadowStartIndex = findFirstContentIndex(items, { skipQuestions: true });
       }
+    }
+    function setShadowRepeatCount(value) {
+      shadowRepeatTotal = normalizeShadowRepeat(value);
+      shadowRepeatRemaining = shadowRepeatTotal;
+      try { localStorage.setItem(SHADOW_REPEAT_KEY, String(shadowRepeatTotal)); } catch(_) {}
+      reflectShadowSettings();
+    }
+    function setShadowGapMode(mode) {
+      if (!Object.prototype.hasOwnProperty.call(SHADOW_GAP_RATIOS, mode)) mode = 'medium';
+      shadowGapMode = mode;
+      try { localStorage.setItem(SHADOW_GAP_KEY, shadowGapMode); } catch(_) {}
+      reflectShadowSettings();
     }
     function updateListenModeUI() {
       const isListenMode = readMode === 'listen';
@@ -500,9 +586,11 @@
     const readModeContinuous = document.getElementById('readModeContinuous');
     const readModeSingle = document.getElementById('readModeSingle');
     const readModeListen = document.getElementById('readModeListen');
+    const readModeShadow = document.getElementById('readModeShadow');
     if (readModeContinuous) readModeContinuous.addEventListener('change', () => { if (readModeContinuous.checked) setReadMode('continuous'); });
     if (readModeSingle) readModeSingle.addEventListener('change', () => { if (readModeSingle.checked) setReadMode('single'); });
     if (readModeListen) readModeListen.addEventListener('change', () => { if (readModeListen.checked) setReadMode('listen'); });
+    if (readModeShadow) readModeShadow.addEventListener('change', () => { if (readModeShadow.checked) setReadMode('shadow'); });
 
     // 自动跟随单选按钮事件
     const followOn = document.getElementById('followOn');
@@ -526,7 +614,7 @@
         afterPlaySingleLabel.addEventListener('click', (e) => {
           if (afterPlaySingleRadio.disabled) {
             e.preventDefault();
-            showNotification('单句循环在连读模式下不可用');
+            showNotification('单句循环在连读/跟读模式下不可用');
           }
         });
       }
@@ -560,6 +648,35 @@
       }
     }
 
+    // 跟读设置
+    const shadowRepeatInput = document.getElementById('shadowRepeat');
+    if (shadowRepeatInput) {
+      shadowRepeatInput.addEventListener('change', () => {
+        setShadowRepeatCount(shadowRepeatInput.value);
+      });
+      shadowRepeatInput.addEventListener('blur', () => {
+        if (!shadowRepeatInput.value) {
+          setShadowRepeatCount(shadowRepeatTotal);
+        }
+      });
+    }
+    const shadowGapShort = document.getElementById('shadowGapShort');
+    const shadowGapMedium = document.getElementById('shadowGapMedium');
+    const shadowGapLong = document.getElementById('shadowGapLong');
+    if (shadowGapShort) shadowGapShort.addEventListener('change', () => { if (shadowGapShort.checked) setShadowGapMode('short'); });
+    if (shadowGapMedium) shadowGapMedium.addEventListener('change', () => { if (shadowGapMedium.checked) setShadowGapMode('medium'); });
+    if (shadowGapLong) shadowGapLong.addEventListener('change', () => { if (shadowGapLong.checked) setShadowGapMode('long'); });
+
+    const shadowSettingsGroup = document.getElementById('shadowSettingsGroup');
+    if (shadowSettingsGroup) {
+      shadowSettingsGroup.addEventListener('click', (e) => {
+        if (readMode !== 'shadow') {
+          e.preventDefault();
+          showNotification('请切换到跟读模式');
+        }
+      });
+    }
+
     // 跳过开头单选按钮事件
     const skipIntroOn = document.getElementById('skipIntroOn');
     const skipIntroOff = document.getElementById('skipIntroOff');
@@ -584,6 +701,8 @@
 
     function pauseForNavigation() {
       try { saveLastPos(); } catch (_) {}
+      clearShadowGapTimer();
+      shadowAutoPause = false;
       if (!audio.paused) {
         try { internalPause = true; audio.pause(); } catch (_) {}
       }
@@ -636,6 +755,23 @@
       playPauseBtn.addEventListener('click', (e) => {
         e.preventDefault();
         if (audio.paused) {
+          if (readMode === 'shadow') {
+            const tolerance = 0.1;
+            if (idx < 0 && items.length > 0) {
+              playSegment(shadowStartIndex, { manual: true });
+              return;
+            }
+            if (idx >= 0 && segmentEnd > 0) {
+              const currentTime = audio.currentTime;
+              if (Math.abs(currentTime - segmentEnd) < tolerance) {
+                playSegment(idx, { manual: true });
+                return;
+              }
+            }
+            const p = audio.play();
+            if (p && p.catch) p.catch(() => {});
+            return;
+          }
           // 和空格键一样的逻辑：点读模式智能跳转
           if (readMode === 'single' && idx >= 0 && segmentEnd > 0) {
             const currentTime = audio.currentTime;
@@ -883,6 +1019,23 @@
       if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
         if (audio.paused) {
+          if (readMode === 'shadow') {
+            const tolerance = 0.1;
+            if (idx < 0 && items.length > 0) {
+              playSegment(shadowStartIndex, { manual: true });
+              return;
+            }
+            if (idx >= 0 && segmentEnd > 0) {
+              const currentTime = audio.currentTime;
+              if (Math.abs(currentTime - segmentEnd) < tolerance) {
+                playSegment(idx, { manual: true });
+                return;
+              }
+            }
+            const p = audio.play();
+            if (p && p.catch) p.catch(() => {});
+            return;
+          }
           // 点读模式下的智能跳转：如果当前在句末（说明是自动暂停的），跳到下一句
           if (readMode === 'single' && idx >= 0 && segmentEnd > 0) {
             const currentTime = audio.currentTime;
@@ -904,7 +1057,8 @@
           // 其他情况：正常播放
           if (idx < 0 && items.length > 0) {
             // 如果没有选中任何句子，从第一句正文开始
-            playSegment(firstContentIndex, { manual: true });
+            const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
+            playSegment(startIdx, { manual: true });
           } else {
             const p = audio.play();
             if (p && p.catch) p.catch(() => {});
@@ -918,7 +1072,8 @@
       // ArrowRight 或 D - 下一句
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         e.preventDefault();
-        const nextIdx = idx < 0 ? firstContentIndex : Math.min(idx + 1, items.length - 1);
+        const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
+        const nextIdx = idx < 0 ? startIdx : Math.min(idx + 1, items.length - 1);
         if (nextIdx < items.length) {
           playSegment(nextIdx, { manual: true });
         }
@@ -928,7 +1083,8 @@
       // ArrowLeft 或 A - 上一句
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         e.preventDefault();
-        const prevIdx = idx < 0 ? firstContentIndex : Math.max(idx - 1, 0);
+        const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
+        const prevIdx = idx < 0 ? startIdx : Math.max(idx - 1, 0);
         if (prevIdx >= 0) {
           playSegment(prevIdx, { manual: true });
         }
@@ -942,7 +1098,8 @@
           playSegment(idx, { manual: true });
         } else if (items.length > 0) {
           // 如果没有当前句，播放第一句正文
-          playSegment(firstContentIndex, { manual: true });
+          const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
+          playSegment(startIdx, { manual: true });
         }
         return;
       }
@@ -963,7 +1120,8 @@
         try{ localStorage.setItem('audioPlaybackRate', DEFAULT_RATE); }catch(_){}
         audio.playbackRate = DEFAULT_RATE;
         setReadMode('continuous'); setFollowMode(false); setAfterPlay('none'); setSkipIntro(false);
-        reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro();
+        setShadowRepeatCount(2); setShadowGapMode('medium');
+        reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro(); reflectShadowSettings();
         showNotification('已恢复默认设置');
       });
     }
@@ -996,7 +1154,7 @@
     const SINGLE_CUTOFF = 0.5;
     const MIN_SEG_DUR = 0.2;
     function endFor(it) {
-      if (readMode === 'single') {
+      if (readMode === 'single' || readMode === 'shadow') {
         // 取下一句开始时间作为结束基准，并减去提前量
         let baseEnd = 0;
         if (it.end && it.end > it.start) baseEnd = it.end;
@@ -1022,6 +1180,9 @@
       if (segmentTimer) { clearTimeout(segmentTimer); segmentTimer = 0; }
       if (segmentRaf)   { cancelAnimationFrame(segmentRaf); segmentRaf = 0; }
     }
+    function clearShadowGapTimer() {
+      if (shadowGapTimer) { clearTimeout(shadowGapTimer); shadowGapTimer = 0; }
+    }
     function guardAheadSec() {
       const r = Math.max(0.5, Math.min(3, audio.playbackRate || 1));
       // iOS 略保守：基础 80ms，倍速升高再加裕度，上限约 120ms
@@ -1031,6 +1192,21 @@
     }
     const NEAR_WINDOW_MS = isIOSLike ? 160 : 120;
     const MAX_CHUNK_MS   = 10000;
+
+    function countWords(text) {
+      if (!text) return 0;
+      const parts = text.trim().split(/\s+/).filter(Boolean);
+      return parts.length;
+    }
+    function estimateShadowGapSeconds(item, endSnap) {
+      if (!item) return 1.5;
+      const baseEnd = (Number.isFinite(endSnap) && endSnap > item.start) ? endSnap : computeEnd(item);
+      const dur = Math.max(0.4, baseEnd - (item.start || 0));
+      const words = countWords(item.en);
+      const base = Math.max(1.2, Math.min(4.8, dur * 0.6 + Math.min(12, words) * 0.08));
+      const ratio = SHADOW_GAP_RATIOS[shadowGapMode] || 1.0;
+      return Math.max(0.8, Math.min(6, base * ratio));
+    }
 
     function scheduleAdvance() {
       clearAdvance(); isScheduling = false; scheduleTime = 0;
@@ -1063,6 +1239,10 @@
               currentTime: audio.currentTime,
               segmentEnd: endSnap
             });
+            if (readMode === 'shadow') {
+              handleShadowSegmentEnd(endSnap);
+              return;
+            }
             audio.pause();
             audio.currentTime = endSnap;
 
@@ -1115,6 +1295,43 @@
         const nextDelay = Math.max(10, Math.min(Math.max(0, (end - audio.currentTime) * 1000 / rate2), MAX_CHUNK_MS));
         segmentTimer = setTimeout(tick, nextDelay);
       }, delay);
+    }
+
+    function handleShadowSegmentEnd(endSnap) {
+      if (readMode !== 'shadow' || shadowGapTimer) return;
+      if (!(idx >= 0 && idx < items.length)) return;
+      const currentIdx = idx;
+      const item = items[currentIdx];
+      shadowRepeatRemaining = Math.max(0, shadowRepeatRemaining - 1);
+      const gapMs = Math.round(estimateShadowGapSeconds(item, endSnap) * 1000);
+
+      shadowAutoPause = true;
+      audio.pause();
+      audio.currentTime = endSnap;
+      clearShadowGapTimer();
+
+      shadowGapTimer = setTimeout(() => {
+        shadowGapTimer = 0;
+        if (readMode !== 'shadow') return;
+        if (idx !== currentIdx && shadowRepeatRemaining > 0) return;
+
+        if (shadowRepeatRemaining > 0) {
+          playSegment(currentIdx, { manual: false, shadowRepeat: true });
+          return;
+        }
+
+        const nextIdx = currentIdx + 1;
+        if (nextIdx < items.length) {
+          playSegment(nextIdx, { manual: false });
+          return;
+        }
+
+        if (afterPlay === 'all') {
+          playSegment(shadowStartIndex, { manual: false });
+        } else if (afterPlay === 'next') {
+          autoNextLesson();
+        }
+      }, gapMs);
     }
 
     // --------------------------
@@ -1177,6 +1394,8 @@
 
     async function playSegment(i, opts) {
       const manual = !!(opts && opts.manual);
+      const shadowRepeat = !!(opts && opts.shadowRepeat);
+      const prevIdx = idx;
       console.log('[循环调试] playSegment调用', {
         idx: i,
         manual,
@@ -1206,6 +1425,11 @@
       // 在 iOS 上，seek 前优先确保 metadata
       await ensureMetadata();
 
+      clearShadowGapTimer();
+      shadowAutoPause = false;
+      if (readMode === 'shadow' && (manual || i !== prevIdx || !shadowRepeat)) {
+        shadowRepeatRemaining = shadowRepeatTotal;
+      }
       clearAdvance(); isScheduling = false; scheduleTime = 0;
       idx = i;
       const it = items[i];
@@ -1335,6 +1559,10 @@
     audio.addEventListener('timeupdate', () => {
       const t = audio.currentTime;
       // 点读模式或听读模式（单句循环）安全网：如果 scheduleAdvance 失效，这里兜底暂停
+      if (readMode === 'shadow' && segmentEnd && t >= segmentEnd && !audio.paused) {
+        handleShadowSegmentEnd(segmentEnd);
+        return;
+      }
       if ((readMode === 'single' || (readMode === 'listen' && afterPlay === 'single')) && segmentEnd && t >= segmentEnd && !audio.paused) {
         audio.pause();
         audio.currentTime = segmentEnd;
@@ -1370,9 +1598,12 @@
         idx,
         currentTime: audio.currentTime
       });
+      const keepShadowGap = shadowAutoPause;
       clearAdvance(); isScheduling = false; scheduleTime = 0;
+      if (!keepShadowGap) clearShadowGapTimer();
       if (!internalPause) saveLastPos(true);
       internalPause = false;
+      shadowAutoPause = false;
       if (scrollTimer) { clearTimeout(scrollTimer); scrollTimer = 0; }
     });
     audio.addEventListener('play', () => {
@@ -1394,15 +1625,16 @@
     // 整体结束
     audio.addEventListener('ended', () => {
       // 整篇循环：从第一句正文重新开始（连读/听读模式）
-      if ((readMode === 'continuous' || readMode === 'listen') && afterPlay === 'all' && items.length > 0) {
+      if ((readMode === 'continuous' || readMode === 'listen' || readMode === 'shadow') && afterPlay === 'all' && items.length > 0) {
         setTimeout(() => {
-          playSegment(firstContentIndex, { manual: true });
+          const restartIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
+          playSegment(restartIdx, { manual: true });
         }, 100);
         return;
       }
 
       // 自动下一课（仅在未开启整篇循环时，连读/听读模式）
-      if ((readMode === 'continuous' || readMode === 'listen') && afterPlay === 'next') {
+      if ((readMode === 'continuous' || readMode === 'listen' || readMode === 'shadow') && afterPlay === 'next') {
         autoNextLesson();
       }
     });
@@ -1549,6 +1781,7 @@
 
       // 智能识别第一句正文的位置
       firstContentIndex = skipIntro ? findFirstContentIndex(items) : 0;
+      shadowStartIndex = findFirstContentIndex(items, { skipQuestions: true });
 
       render();
       touchRecent();
@@ -1574,9 +1807,14 @@
               targetTime = items[firstContentIndex].start || 0;
               console.log(`[跳过开头] 断点恢复：保存的位置 ${pos.idx} 在跳过区域内，从索引 ${firstContentIndex}（时间 ${targetTime}s）开始播放`);
             }
+            if (readMode === 'shadow' && targetIdx < shadowStartIndex) {
+              targetIdx = shadowStartIndex;
+              targetTime = items[shadowStartIndex].start || 0;
+            }
 
             audio.currentTime = targetTime;
             idx = targetIdx; segmentEnd = endFor(items[targetIdx]);
+            if (readMode === 'shadow') shadowRepeatRemaining = shadowRepeatTotal;
             highlight(targetIdx, false);
             if (sessionStorage.getItem('nce_resume_play')==='1'){
               const p = audio.play(); if (p && p.catch) p.catch(()=>{});

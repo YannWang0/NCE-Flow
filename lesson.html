@@ -166,28 +166,59 @@
           <button id="speed" class="back-inline" aria-label="速度">速度</button>
         </div>
       </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">阅读模式</div>
-          <div class="settings-desc">连读：自动播放下一句；点读：只播放你点的那一句；听读：遮盖句子纯听力训练。</div>
-        </div>
-        <div class="settings-control">
-          <div id="readModeCard" class="auto-continue-card" role="radiogroup" aria-label="阅读模式">
-            <div class="auto-continue-option">
-              <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
-              <label for="readModeContinuous">连读</label>
+          <div class="settings-group">
+            <div class="settings-left">
+              <div class="settings-label">阅读模式</div>
+          <div class="settings-desc">连读：自动播放下一句；点读：只播放你点的那一句；听读：遮盖句子纯听力训练；跟读：单句循环并自动续句。</div>
             </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="readModeSingle" name="readMode" value="single">
-              <label for="readModeSingle">点读</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="readModeListen" name="readMode" value="listen">
-              <label for="readModeListen">听读</label>
+            <div class="settings-control">
+              <div id="readModeCard" class="auto-continue-card" role="radiogroup" aria-label="阅读模式">
+                <div class="auto-continue-option">
+                  <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
+                  <label for="readModeContinuous">连读</label>
+                </div>
+                <div class="auto-continue-option">
+                  <input type="radio" id="readModeSingle" name="readMode" value="single">
+                  <label for="readModeSingle">点读</label>
+                </div>
+                <div class="auto-continue-option">
+                  <input type="radio" id="readModeListen" name="readMode" value="listen">
+                  <label for="readModeListen">听读</label>
+                </div>
+                <div class="auto-continue-option">
+                  <input type="radio" id="readModeShadow" name="readMode" value="shadow">
+                  <label for="readModeShadow">跟读</label>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+          <div class="settings-group" id="shadowSettingsGroup">
+            <div class="settings-left">
+              <div class="settings-label">跟读设置</div>
+              <div class="settings-desc">单句循环次数与跟读间隔倍率设置。</div>
+            </div>
+            <div class="settings-control shadow-controls">
+              <div class="shadow-repeat">
+                <label class="shadow-label" for="shadowRepeat">循环</label>
+                <input id="shadowRepeat" class="shadow-number" type="number" min="1" max="9" step="1" inputmode="numeric" pattern="[0-9]*" value="2" aria-label="跟读循环次数">
+                <span class="shadow-unit">遍</span>
+              </div>
+              <div id="shadowGapCard" class="auto-continue-card" role="radiogroup" aria-label="跟读间隔">
+                <div class="auto-continue-option">
+                  <input type="radio" id="shadowGapShort" name="shadowGap" value="short">
+                  <label for="shadowGapShort">短</label>
+                </div>
+                <div class="auto-continue-option">
+                  <input type="radio" id="shadowGapMedium" name="shadowGap" value="medium">
+                  <label for="shadowGapMedium">中</label>
+                </div>
+                <div class="auto-continue-option">
+                  <input type="radio" id="shadowGapLong" name="shadowGap" value="long">
+                  <label for="shadowGapLong">长</label>
+                </div>
+              </div>
+            </div>
+          </div>
       <div class="settings-group">
         <div class="settings-left">
           <div class="settings-label">播完后</div>

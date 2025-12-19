@@ -798,6 +798,21 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 .settings-label{font-size:13px; color:var(--text); font-weight:600}
 .settings-desc{font-size:12px; color:var(--muted); line-height:1.5}
 .settings-control{display:flex; align-items:center; gap:8px}
+.shadow-controls{display:flex; flex-direction:column; align-items:flex-end; gap:8px}
+.shadow-repeat{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:4px 8px; height:var(--control-h)}
+.shadow-label,.shadow-unit{font-size:12px; color:var(--muted)}
+.shadow-number{width:56px; height:28px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); padding:0 6px; font-size:12px}
+#shadowSettingsGroup.is-disabled{opacity:0.6; cursor:not-allowed}
+#shadowGapCard{align-self:flex-end}
+
+@media (max-width: 768px){
+  .shadow-controls{align-items:stretch}
+  .shadow-repeat{width:100%; justify-content:space-between}
+  .shadow-number{flex:1; min-width:0}
+  #shadowGapCard{width:100%; align-self:stretch}
+  #shadowGapCard .auto-continue-option{width:100%}
+  #shadowGapCard .auto-continue-option label{width:100%; text-align:center}
+}
 .settings-footer{display:flex; justify-content:space-between; padding:6px}
 .settings-control #modeToggle{display:none}
 
