@@ -582,12 +582,20 @@
       scheduleAdvance();
     });
 
+    function pauseForNavigation() {
+      try { saveLastPos(); } catch (_) {}
+      if (!audio.paused) {
+        try { internalPause = true; audio.pause(); } catch (_) {}
+      }
+    }
+
     // 返回
     if (backLink) {
       const fallback = `index.html#${book}`;
       backLink.setAttribute('href', fallback);
       backLink.addEventListener('click', (e) => {
         e.preventDefault();
+        pauseForNavigation();
         location.href = fallback;
       });
     }
@@ -1584,6 +1592,7 @@
       subEl.textContent = String(err);
     });
 
+    window.addEventListener('pagehide', () => { pauseForNavigation(); });
     window.addEventListener('beforeunload', ()=>{ saveLastPos(); try { if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl); } catch(_) {} });
     window.addEventListener('hashchange', () => { window.scrollTo(0, 0); location.reload(); });
   });
