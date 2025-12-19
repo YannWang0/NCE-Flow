@@ -2,7 +2,7 @@
 
 # NCE Flow Docker 镜像构建和推送脚本
 # 使用方法: ./build-and-push.sh <version>
-# 例如: ./build-and-push.sh 1.5.1
+# 例如: ./build-and-push.sh 1.6.0
 
 set -e
 
@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 if [ -z "$1" ]; then
     echo -e "${RED}错误: 请提供版本号${NC}"
     echo "使用方法: $0 <version>"
-    echo "例如: $0 1.5.1"
+    echo "例如: $0 1.6.0"
     exit 1
 fi
 
