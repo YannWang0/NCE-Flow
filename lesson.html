@@ -157,20 +157,11 @@
       </button>
     </div>
     <div class="settings-body">
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">播放速度</div>
-          <div class="settings-desc">点击切换常用倍速，自动记住你的选择。</div>
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">阅读模式</div>
         </div>
-        <div class="settings-control">
-          <button id="speed" class="back-inline" aria-label="速度">速度</button>
-        </div>
-      </div>
-          <div class="settings-group full-width">
-            <div class="settings-header-row">
-              <div class="settings-label">阅读模式</div>
-            </div>
-            <div class="read-mode-options" role="radiogroup" aria-label="阅读模式">
+        <div class="read-mode-options" role="radiogroup" aria-label="阅读模式">
               <label class="mode-option">
                 <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
                 <div class="mode-card-inner">
@@ -222,8 +213,17 @@
                   </div>
                 </div>
               </label>
-            </div>
-          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-left">
+          <div class="settings-label">播放速度</div>
+          <div class="settings-desc">点击切换常用倍速，自动记住你的选择。</div>
+        </div>
+        <div class="settings-control">
+          <button id="speed" class="back-inline" aria-label="速度">速度</button>
+        </div>
+      </div>
           <div class="settings-group" id="shadowSettingsGroup">
             <div class="settings-left">
               <div class="settings-label">跟读设置</div>
