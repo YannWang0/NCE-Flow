@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NCE Flow">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>关于 · NCE Flow</title>
+  <link rel="stylesheet" href="assets/styles.css">
+
+  <!--  Microsoft Clarity 统计代码 -->
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "tvjv632zgs");
+  </script>
+  <!--  Microsoft Clarity 代码结束 -->
+
+  <!-- 主题切换逻辑 -->
+  <script>
+    (function() {
+      if (!window.matchMedia) return;
+      const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const applyTheme = function(isDark) {
+        if (!document.body) return;
+        document.body.classList.remove('dark-theme', 'light-theme');
+        if (isDark) {
+          document.body.classList.add('dark-theme');
+        } else {
+          document.body.classList.add('light-theme');
+        }
+      };
+      const handleChange = function(e) { applyTheme(e.matches); };
+      if (colorSchemeQuery.addEventListener) {
+        colorSchemeQuery.addEventListener('change', handleChange);
+      } else if (colorSchemeQuery.addListener) {
+        colorSchemeQuery.addListener(handleChange);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { applyTheme(colorSchemeQuery.matches); });
+      } else {
+        applyTheme(colorSchemeQuery.matches);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="about-container">
+    <header class="about-header">
+      <h1>关于</h1>
+      <p class="subtitle">NCE Flow</p>
+    </header>
+    
+    <main>
+      <!-- 项目与致谢 -->
+      <div class="about-card">
+        <div class="about-section">
+          <div class="about-heading">项目与致谢</div>
+          <div class="about-text">
+            <p>
+              特别感谢 <strong>@iChochy - NCE 项目</strong> 整理并提供了完整的新概念英语学习资料，包括封面图片、MP3 音频文件和 LRC 字幕文件。这些宝贵的基础资源为本项目得以实现提供了核心支持。
+            </p>
+            <p>
+              NCE Flow 是一个纯粹的辅助学习工具，所有内容仅限个人学习、研究或欣赏之用。
+            </p>
+            <p>
+              在此郑重承诺：<strong>本项目永久免费，且绝不添加任何形式的商业广告。</strong> 这是一个纯公益项目，只为给英语学习者提供一个干净、流畅的学习环境。如果您觉得不错，也欢迎通过捐助页面支持我们的服务器开销。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 支持正版与版权声明 -->
+      <div class="about-card">
+        <div class="about-section">
+          <div class="about-heading">支持正版</div>
+          <div class="about-text">
+            <p>
+              本人在开发与学习过程中，始终使用的是<strong>正版新概念英语教材</strong>。开发此工具的初衷，是为了帮助同样热爱新概念英语的朋友们更高效地利用手头的教材。
+            </p>
+            <p>
+              为保护著作权人的合法权益，请务必在使用本站前购买正版教材：
+            </p>
+            <ul style="padding-left: 20px; margin: 0 0 16px 0; color: var(--muted); line-height: 1.6;">
+              <li>购买合法授权的新概念英语正版书籍</li>
+              <li>使用官方授权的学习资源和平台</li>
+              <li>以实际行动支持原创作者和教育出版社</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <div class="about-heading">版权与免责声明</div>
+          <div class="legal-block">
+            <p>本项目仅作为正版教材的补充学习工具。</p>
+            <p>音频与文本内容的版权均归原著作权人所有。严禁将本项目中的资源用于任何商业目的或未经授权的传播。</p>
+            <p>使用本项目即表示您同意上述条款。</p>
+            <p style="margin-top: 12px; font-size: 0.85rem;">
+              如有任何版权问题或影响到您的合法权益，请联系：<strong>luzhenhuadev@qq.com</strong>，我们将立即处理。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 更新日志 -->
+      <div class="about-card">
+        <div class="about-section">
+          <div class="about-heading">更新日志</div>
+          <ul class="version-list">
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.6.2</span>
+                <span class="version-date">2025-12-20</span>
+              </div>
+              <div class="version-desc">优化阅读模式中的选项显示效果，提升视觉体验。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.6.0</span>
+                <span class="version-date">2025-12-19</span>
+              </div>
+              <div class="version-desc">新增跟读模式；修正部分字幕错误；实现页面切换时自动暂停音频。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.5.1</span>
+                <span class="version-date">2025-12-13</span>
+              </div>
+              <div class="version-desc">修复本地点读跳转问题；修复 Service Worker 预缓存逻辑。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.5.0</span>
+                <span class="version-date">2025-12-12</span>
+              </div>
+              <div class="version-desc">大幅优化课文页交互；针对移动端体验进行深度调整。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.4.9</span>
+                <span class="version-date">2025-12-06</span>
+              </div>
+              <div class="version-desc">修复 PWA 安装入口显示问题；同步版本号。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.4.8</span>
+                <span class="version-date">2025-11-27</span>
+              </div>
+              <div class="version-desc">新增 PWA (Progressive Web App) 支持，可安装到桌面或手机。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.4.4</span>
+                <span class="version-date">2025-11-22</span>
+              </div>
+              <div class="version-desc">新增智能跳过开头功能（可开关）；进一步优化播放体验。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.4.3</span>
+                <span class="version-date">2025-11-10</span>
+              </div>
+              <div class="version-desc">优化课程翻译显示；修复切换课程后倍速被重置的问题。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.4.2</span>
+                <span class="version-date">2025-10-26</span>
+              </div>
+              <div class="version-desc">修复移动端深色模式切换异常；优化全局主题切换逻辑。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.3.3</span>
+                <span class="version-date">2025-10-20</span>
+              </div>
+              <div class="version-desc">修复课程页面返回按钮的跳转行为。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.3.2</span>
+                <span class="version-date">2025-10-19</span>
+              </div>
+              <div class="version-desc">UI 增强：快捷键面板优化、版本号显示；修复面板切换问题。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.3.1</span>
+                <span class="version-date">2025-10-19</span>
+              </div>
+              <div class="version-desc">修复课程导航按钮的布局错位问题。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.3.0</span>
+                <span class="version-date">2025-10-19</span>
+              </div>
+              <div class="version-desc">新增循环模式支持（单句循环/整篇循环）。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.2.0</span>
+                <span class="version-date">2025-10-19</span>
+              </div>
+              <div class="version-desc">支持全局快捷键（空格播放/暂停、方向键切句、音量控制等）。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.1.4</span>
+                <span class="version-date">2025-10-18</span>
+              </div>
+              <div class="version-desc">Docker 部署支持，提供更便捷的私有化部署方式。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.1.3</span>
+                <span class="version-date">2025-10-18</span>
+              </div>
+              <div class="version-desc">稳定性改进，修复已知 Bug 并优化代码。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.1.1</span>
+                <span class="version-date">2025-10-17</span>
+              </div>
+              <div class="version-desc">优化播放逻辑，增强 iOS Safari 兼容性。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.1.0</span>
+                <span class="version-date">2025-10-17</span>
+              </div>
+              <div class="version-desc">UI 优化；新增自动续播下一课功能。</div>
+            </li>
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.0.0</span>
+                <span class="version-date">2025-10-11</span>
+              </div>
+              <div class="version-desc">完整版发布：包含新概念英语 1-4 册全部内容与音频文件。</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="page-actions" style="margin-top: 48px;">
+        <a class="btn" href="/" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
+      </div>
+    </main>
+    
+    <footer style="margin-top: 60px; text-align: center; color: var(--muted); opacity: 0.6; font-size: 0.8rem;">
+       <p class="version">NCE Flow · Designed for Learners</p>
+    </footer>
+  </div>
+  
+  <script>
+    // 注册 Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => {
+            reg.update();
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (refreshing) return;
+              refreshing = true;
+              window.location.reload();
+            });
+          })
+          .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
+      });
+    }
+  </script>
+</body>
+</html>
