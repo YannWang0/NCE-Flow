@@ -816,6 +816,120 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 .settings-footer{display:flex; justify-content:space-between; padding:6px}
 .settings-control #modeToggle{display:none}
 
+/* Full width settings group */
+.settings-group.full-width {
+  display: block;
+  padding: 16px;
+}
+.settings-header-row {
+  margin-bottom: 12px;
+}
+.settings-header-row .settings-label {
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+/* Read Mode Grid */
+.read-mode-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.mode-option {
+  position: relative;
+  cursor: pointer;
+  display: block;
+}
+.mode-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.mode-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 6px;
+  height: 100%;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.mode-icon {
+  color: var(--muted);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mode-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.mode-detail {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+/* Checked state */
+.mode-option input:checked + .mode-card-inner {
+  background: var(--bg);
+  border-color: var(--text);
+  box-shadow: 0 0 0 1px var(--text), var(--shadow);
+}
+.mode-option input:checked + .mode-card-inner .mode-icon {
+  color: var(--text);
+}
+.mode-option:hover .mode-card-inner {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  border-color: color-mix(in srgb, var(--border) 80%, var(--text));
+}
+.mode-option:active .mode-card-inner {
+  transform: scale(0.98);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .read-mode-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .mode-card-inner {
+    flex-direction: row;
+    padding: 12px;
+    text-align: left;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .mode-info {
+    align-items: flex-start;
+  }
+  .mode-name {
+    font-size: 14px;
+  }
+  .mode-detail {
+    font-size: 11px;
+  }
+}
+
 /* Make inline controls adapt nicely inside panel */
 .settings-panel .back-inline{height:28px; padding:0 10px}
 .settings-panel .auto-continue-card{height:auto; padding:6px}

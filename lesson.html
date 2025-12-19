@@ -166,30 +166,62 @@
           <button id="speed" class="back-inline" aria-label="速度">速度</button>
         </div>
       </div>
-          <div class="settings-group">
-            <div class="settings-left">
+          <div class="settings-group full-width">
+            <div class="settings-header-row">
               <div class="settings-label">阅读模式</div>
-          <div class="settings-desc">连读：自动播放下一句；点读：只播放你点的那一句；听读：遮盖句子纯听力训练；跟读：单句循环并自动续句。</div>
             </div>
-            <div class="settings-control">
-              <div id="readModeCard" class="auto-continue-card" role="radiogroup" aria-label="阅读模式">
-                <div class="auto-continue-option">
-                  <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
-                  <label for="readModeContinuous">连读</label>
+            <div class="read-mode-options" role="radiogroup" aria-label="阅读模式">
+              <label class="mode-option">
+                <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
+                <div class="mode-card-inner">
+                  <div class="mode-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  </div>
+                  <div class="mode-info">
+                    <div class="mode-name">连读</div>
+                    <div class="mode-detail">自动播放下一句</div>
+                  </div>
                 </div>
-                <div class="auto-continue-option">
-                  <input type="radio" id="readModeSingle" name="readMode" value="single">
-                  <label for="readModeSingle">点读</label>
+              </label>
+              
+              <label class="mode-option">
+                <input type="radio" id="readModeSingle" name="readMode" value="single">
+                <div class="mode-card-inner">
+                  <div class="mode-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+                  </div>
+                  <div class="mode-info">
+                    <div class="mode-name">点读</div>
+                    <div class="mode-detail">只播放点击句子</div>
+                  </div>
                 </div>
-                <div class="auto-continue-option">
-                  <input type="radio" id="readModeListen" name="readMode" value="listen">
-                  <label for="readModeListen">听读</label>
+              </label>
+
+              <label class="mode-option">
+                <input type="radio" id="readModeListen" name="readMode" value="listen">
+                <div class="mode-card-inner">
+                  <div class="mode-icon">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  </div>
+                  <div class="mode-info">
+                    <div class="mode-name">听读</div>
+                    <div class="mode-detail">遮盖句子纯听力</div>
+                  </div>
                 </div>
-                <div class="auto-continue-option">
-                  <input type="radio" id="readModeShadow" name="readMode" value="shadow">
-                  <label for="readModeShadow">跟读</label>
+              </label>
+
+              <label class="mode-option">
+                <input type="radio" id="readModeShadow" name="readMode" value="shadow">
+                <div class="mode-card-inner">
+                  <div class="mode-icon">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                  </div>
+                  <div class="mode-info">
+                    <div class="mode-name">跟读</div>
+                    <div class="mode-detail">单句循环自动续句</div>
+                  </div>
                 </div>
-              </div>
+              </label>
             </div>
           </div>
           <div class="settings-group" id="shadowSettingsGroup">
