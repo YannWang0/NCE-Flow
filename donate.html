@@ -13,7 +13,7 @@
   <title>支持与捐助 · NCE Flow</title>
   <link rel="stylesheet" href="assets/styles.css">
 
-  <!--  Microsoft Clarity 统计代码 -->
+  <!-- Microsoft Clarity 统计代码 -->
   <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -21,9 +21,8 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "tvjv632zgs");
   </script>
-  <!--  Microsoft Clarity 代码结束 -->
 
-  <!-- 主题切换逻辑 - 使用 class-based 方法 -->
+  <!-- 主题切换 -->
   <script>
     (function() {
       if (!window.matchMedia) return;
@@ -32,18 +31,9 @@
 
       const applyTheme = function(isDark) {
         if (!document.body) return;
-
-        // 移除所有主题 class
         document.body.classList.remove('dark-theme', 'light-theme');
+        document.body.classList.add(isDark ? 'dark-theme' : 'light-theme');
 
-        // 添加对应的主题 class
-        if (isDark) {
-          document.body.classList.add('dark-theme');
-        } else {
-          document.body.classList.add('light-theme');
-        }
-
-        // 强制浏览器重绘
         const originalDisplay = document.body.style.display;
         document.body.style.display = 'none';
         void document.body.offsetHeight;
@@ -55,20 +45,16 @@
         }, 0);
       };
 
-      const handleChange = function(e) {
-        applyTheme(e.matches);
-      };
+      const handleChange = e => applyTheme(e.matches);
 
-      // 注册监听器
       if (colorSchemeQuery.addEventListener) {
         colorSchemeQuery.addEventListener('change', handleChange);
-      } else if (colorSchemeQuery.addListener) {
+      } else {
         colorSchemeQuery.addListener(handleChange);
       }
 
-      // 等待 DOM 加载后立即应用主题
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
           applyTheme(colorSchemeQuery.matches);
         });
       } else {
@@ -77,19 +63,20 @@
     })();
   </script>
 </head>
+
 <body>
   <div class="donate-container">
     <header class="donate-header">
       <h1>支持与赞助</h1>
       <p class="subtitle">Support NCE Flow</p>
     </header>
-    
+
     <main>
       <div class="donate-card">
         <div class="donate-message">
           <p>我是 NCE Flow 的开发者，目前还是一名在校学生。</p>
           <p>搭建这个网站的初衷很简单：希望能有一个纯粹、流畅、无干扰的新概念英语学习工具。看到大家能在这里有所收获，就是我最大的动力。</p>
-          <p>虽然维持网站的访问速度需要承担一些服务器与 CDN 费用，但请<b>务必在您经济宽裕的前提下</b>再考虑赞助。如果暂时不方便也完全没关系，只要 NCE Flow 能为您原本枯燥的学习过程带来一丝便捷与愉悦，这便是我最大的满足。</p>
+          <p>虽然维持网站的访问速度需要承担一些服务器与 CDN 费用，但请 <b>务必在您经济宽裕的前提下</b> 再考虑赞助。如果暂时不方便也完全没关系，只要 NCE Flow 能为您原本枯燥的学习过程带来一丝便捷与愉悦，这便是我最大的满足。</p>
         </div>
 
         <div class="donate-qr-section">
@@ -100,17 +87,16 @@
           <div class="donate-hint">
             您在打赏时的备注将作为昵称<br>展示在下方的捐助名单中
           </div>
-          <p class="donate-footer-note">
-            量力而行 · 感谢陪伴
-          </p>
+          <p class="donate-footer-note">量力而行 · 感谢陪伴</p>
         </div>
 
         <div class="donate-divider"></div>
 
         <div class="donor-list-section">
           <div class="donor-list-header">
-             <h2 class="donor-list-title">捐助名单</h2>
+            <h2 class="donor-list-title">捐助名单</h2>
           </div>
+
           <div class="donate-table-wrap">
             <table class="donate-table">
               <thead>
@@ -121,6 +107,13 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- 新增的赞助记录 -->
+                <tr>
+                  <td>匿名的好心人</td>
+                  <td class="donate-amount">¥200.00</td>
+                  <td class="donate-date">2025-12-21</td>
+                </tr>
+
                 <tr>
                   <td>王多鱼</td>
                   <td class="donate-amount">¥0.30</td>
@@ -151,18 +144,17 @@
         <a class="btn" href="/" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
       </div>
     </main>
-    
+
     <footer style="margin-top: 60px; text-align: center; color: var(--muted); opacity: 0.6; font-size: 0.8rem;">
-       <p class="version">NCE Flow · Designed for Learners</p>
+      <p class="version">NCE Flow · Designed for Learners</p>
     </footer>
   </div>
-  
+
   <script>
-    // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then((reg) => {
+          .then(reg => {
             reg.update();
 
             if (reg.waiting) {
