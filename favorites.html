@@ -82,7 +82,7 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="aiBtn" class="back-inline" type="button" aria-label="AI 面板" title="AI 面板">AI</button>
+          <button id="ttsSettingsBtn" class="back-inline" type="button" aria-label="设置" title="设置">设置</button>
           <button id="clearBtn" class="back-inline" type="button" aria-label="清空清单" title="清空清单">清空</button>
         </div>
       </div>
@@ -122,9 +122,6 @@
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2V5zM2 12l13 7V5L2 12z"/></svg>
         </button>
         <div class="time-display" id="ttsPos">0/0</div>
-        <button id="ttsLoop" class="back-inline" type="button" aria-label="循环模式" title="循环模式">循环：关</button>
-        <button id="ttsRate" class="back-inline" type="button" aria-label="倍速" title="倍速">1.0x</button>
-        <button id="ttsVoiceBtn" class="back-inline" type="button" aria-label="选择音色" title="选择音色">音色</button>
       </div>
     </div>
   </div>
@@ -133,7 +130,7 @@
   <div id="ttsOverlay" class="settings-overlay" hidden></div>
   <div id="ttsPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsTitle" hidden>
     <div class="settings-header">
-      <h2 id="ttsTitle">清单播放设置</h2>
+      <h2 id="ttsTitle">播放设置</h2>
       <button id="ttsClose" class="icon-btn" aria-label="关闭" title="关闭">
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <path d="M5 5 L15 15 M15 5 L5 15"></path>
@@ -143,28 +140,7 @@
     <div class="settings-body">
       <div class="settings-group full-width">
         <div class="settings-header-row">
-          <div class="settings-label">音色</div>
-        </div>
-        <select id="ttsVoice" class="tts-select" aria-label="音色"></select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loop Settings -->
-  <div id="ttsLoopOverlay" class="settings-overlay" hidden></div>
-  <div id="ttsLoopPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsLoopTitle" hidden>
-    <div class="settings-header">
-      <h2 id="ttsLoopTitle">循环模式</h2>
-      <button id="ttsLoopClose" class="icon-btn" aria-label="关闭" title="关闭">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 5 L15 15 M15 5 L5 15"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="settings-body">
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
-          <div class="settings-label">选择模式</div>
+          <div class="settings-label">循环</div>
         </div>
         <select id="ttsLoopSelect" class="tts-select" aria-label="循环模式">
           <option value="off">关（只播放当前一句）</option>
@@ -172,26 +148,17 @@
           <option value="all">全清单循环</option>
         </select>
       </div>
-    </div>
-  </div>
-
-  <!-- Rate Settings -->
-  <div id="ttsRateOverlay" class="settings-overlay" hidden></div>
-  <div id="ttsRatePanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsRateTitle" hidden>
-    <div class="settings-header">
-      <h2 id="ttsRateTitle">播放速度</h2>
-      <button id="ttsRateClose" class="icon-btn" aria-label="关闭" title="关闭">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 5 L15 15 M15 5 L5 15"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="settings-body">
       <div class="settings-group full-width">
         <div class="settings-header-row">
-          <div class="settings-label">选择倍速</div>
+          <div class="settings-label">倍速</div>
         </div>
         <select id="ttsRateSelect" class="tts-select" aria-label="播放速度"></select>
+      </div>
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">音色</div>
+        </div>
+        <select id="ttsVoice" class="tts-select" aria-label="音色"></select>
       </div>
     </div>
   </div>

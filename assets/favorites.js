@@ -34,7 +34,6 @@
     const favSub = qs('#favSub');
     const listEl = qs('#favSentences');
 
-    const aiBtn = qs('#aiBtn');
     const aiOverlay = qs('#aiOverlay');
     const aiPanel = qs('#aiPanel');
     const aiClose = qs('#aiClose');
@@ -42,23 +41,15 @@
     const aiCopySentence = qs('#aiCopySentence');
     const aiCopyPrompt = qs('#aiCopyPrompt');
 
+    const ttsSettingsBtn = qs('#ttsSettingsBtn');
     const ttsPrev = qs('#ttsPrev');
     const ttsPlayPause = qs('#ttsPlayPause');
     const ttsNext = qs('#ttsNext');
-    const ttsLoopBtn = qs('#ttsLoop');
-    const ttsRateBtn = qs('#ttsRate');
-    const ttsVoiceBtn = qs('#ttsVoiceBtn');
     const ttsOverlay = qs('#ttsOverlay');
     const ttsPanel = qs('#ttsPanel');
     const ttsClose = qs('#ttsClose');
     const ttsVoiceSelect = qs('#ttsVoice');
-    const ttsLoopOverlay = qs('#ttsLoopOverlay');
-    const ttsLoopPanel = qs('#ttsLoopPanel');
-    const ttsLoopClose = qs('#ttsLoopClose');
     const ttsLoopSelect = qs('#ttsLoopSelect');
-    const ttsRateOverlay = qs('#ttsRateOverlay');
-    const ttsRatePanel = qs('#ttsRatePanel');
-    const ttsRateClose = qs('#ttsRateClose');
     const ttsRateSelect = qs('#ttsRateSelect');
 
     let favs = loadFavs();
@@ -255,6 +246,7 @@
                 </svg>
                 原文
               </button>
+              <button class="sentence-ai-btn" type="button" data-action="ai" data-i="${i}" aria-label="AI 助手" title="AI 助手">AI</button>
             </div>
             ${meta ? `<div class="fav-meta">${escapeHTML(meta)}</div>` : ''}
           </div>
@@ -395,8 +387,6 @@
     try { ttsRate = clampRate(localStorage.getItem(TTS_RATE_KEY)); } catch (_) { ttsRate = 1.0; }
     try { ttsLoop = normalizeLoop(localStorage.getItem(TTS_LOOP_KEY)); } catch (_) { ttsLoop = 'off'; }
     try { ttsVoiceName = String(localStorage.getItem(TTS_VOICE_KEY) || ''); } catch (_) { ttsVoiceName = ''; }
-    if (ttsRateBtn) ttsRateBtn.textContent = rateLabel(ttsRate);
-    if (ttsLoopBtn) ttsLoopBtn.textContent = loopLabel(ttsLoop);
     setPlayIcon(false);
     if (ttsRateSelect) {
       const opts = RATE_OPTIONS.map(r => `<option value="${r}">${rateLabel(r)}</option>`).join('');
@@ -455,6 +445,10 @@
       });
     }
 
+    if (ttsSettingsBtn) ttsSettingsBtn.addEventListener('click', () => openPanel(ttsOverlay, ttsPanel));
+    if (ttsOverlay) ttsOverlay.addEventListener('click', () => closePanel(ttsOverlay, ttsPanel));
+    if (ttsClose) ttsClose.addEventListener('click', () => closePanel(ttsOverlay, ttsPanel));
+
     document.addEventListener('click', (e) => {
       const actionBtn = e.target.closest('[data-action]');
       if (actionBtn) {
@@ -470,6 +464,14 @@
           e.stopPropagation();
           const i = parseInt(actionBtn.dataset.i, 10);
           if (Number.isFinite(i)) jumpToSource(i);
+          return;
+        }
+        if (action === 'ai') {
+          e.preventDefault();
+          e.stopPropagation();
+          const i = parseInt(actionBtn.dataset.i, 10);
+          if (Number.isFinite(i)) setCurrent(i, { scroll: true });
+          openPanel(aiOverlay, aiPanel);
           return;
         }
       }
@@ -512,38 +514,27 @@
       const start = (currentIndex >= 0) ? currentIndex : 0;
       speakIndex(start, { scroll: true });
     });
-    if (ttsLoopBtn) ttsLoopBtn.addEventListener('click', () => openPanel(ttsLoopOverlay, ttsLoopPanel));
-    if (ttsLoopOverlay) ttsLoopOverlay.addEventListener('click', () => closePanel(ttsLoopOverlay, ttsLoopPanel));
-    if (ttsLoopClose) ttsLoopClose.addEventListener('click', () => closePanel(ttsLoopOverlay, ttsLoopPanel));
     if (ttsLoopSelect) ttsLoopSelect.addEventListener('change', () => {
       ttsLoop = normalizeLoop(ttsLoopSelect.value);
       try { localStorage.setItem(TTS_LOOP_KEY, ttsLoop); } catch (_) {}
-      if (ttsLoopBtn) ttsLoopBtn.textContent = loopLabel(ttsLoop);
-      closePanel(ttsLoopOverlay, ttsLoopPanel);
+      showNotification(loopLabel(ttsLoop));
+      if (ttsState === 'playing' || ttsState === 'paused') speakIndex(currentIndex, { scroll: true });
     });
-
-    if (ttsRateBtn) ttsRateBtn.addEventListener('click', () => openPanel(ttsRateOverlay, ttsRatePanel));
-    if (ttsRateOverlay) ttsRateOverlay.addEventListener('click', () => closePanel(ttsRateOverlay, ttsRatePanel));
-    if (ttsRateClose) ttsRateClose.addEventListener('click', () => closePanel(ttsRateOverlay, ttsRatePanel));
     if (ttsRateSelect) ttsRateSelect.addEventListener('change', () => {
       ttsRate = clampRate(ttsRateSelect.value);
       try { localStorage.setItem(TTS_RATE_KEY, String(ttsRate)); } catch (_) {}
-      if (ttsRateBtn) ttsRateBtn.textContent = rateLabel(ttsRate);
       if (ttsState === 'playing' || ttsState === 'paused') speakIndex(currentIndex, { scroll: true });
-      closePanel(ttsRateOverlay, ttsRatePanel);
+      showNotification(`倍速：${rateLabel(ttsRate)}`);
     });
-    if (ttsVoiceBtn) ttsVoiceBtn.addEventListener('click', () => openPanel(ttsOverlay, ttsPanel));
-    if (ttsOverlay) ttsOverlay.addEventListener('click', () => closePanel(ttsOverlay, ttsPanel));
-    if (ttsClose) ttsClose.addEventListener('click', () => closePanel(ttsOverlay, ttsPanel));
     if (ttsVoiceSelect) ttsVoiceSelect.addEventListener('change', () => {
       if (!supportsTTS()) return;
       ttsVoiceName = ttsVoiceSelect.value || '';
       try { localStorage.setItem(TTS_VOICE_KEY, ttsVoiceName); } catch (_) {}
       ttsVoice = (ttsVoices || []).find(v => v && v.name === ttsVoiceName) || null;
       if (ttsState === 'playing' || ttsState === 'paused') speakIndex(currentIndex, { scroll: true });
+      showNotification('已切换音色');
     });
 
-    if (aiBtn) aiBtn.addEventListener('click', () => openPanel(aiOverlay, aiPanel));
     if (aiOverlay) aiOverlay.addEventListener('click', () => closePanel(aiOverlay, aiPanel));
     if (aiClose) aiClose.addEventListener('click', () => closePanel(aiOverlay, aiPanel));
     if (aiCopySentence) aiCopySentence.addEventListener('click', async () => {
