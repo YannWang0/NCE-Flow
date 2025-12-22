@@ -1585,6 +1585,10 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
   .player .back-inline:not(#backLink):not(#settingsBtn){display:none}
 }
 
+@media (max-width: 560px){
+  body.favorites-page .player .back-inline{display:inline-flex !important}
+}
+
 /* Shortcuts Help Panel */
 .shortcuts-panel{max-height:min(90vh, 720px)}
 .shortcuts-group{padding:12px 0; border-bottom:1px solid color-mix(in srgb, var(--border) 50%, transparent)}

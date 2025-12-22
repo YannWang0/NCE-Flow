@@ -219,7 +219,7 @@
     }
 
     function setSubtitle() {
-      favSub.textContent = favs.length ? `共收藏 ${favs.length} 句` : '还没有收藏句子：去课文里点 ⭐ 加入清单';
+      favSub.textContent = favs.length ? `共收藏 ${favs.length} 句` : '';
     }
 
     function updateTtsPos() {
