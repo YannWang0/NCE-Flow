@@ -96,6 +96,7 @@
 	    // 本地存储键
 	    const RECENT_KEY = 'nce_recents';
 	    const LASTPOS_KEY = 'nce_lastpos';
+    const SENTENCE_FAV_KEY = 'nce_sentence_favs_v1';
     const MODE_KEY = 'readMode';
     const FOLLOW_KEY = 'autoFollow';
     const AFTER_PLAY_KEY = 'afterPlay';
@@ -103,6 +104,19 @@
     const SKIP_INTRO_KEY = 'skipIntro';
     const SHADOW_REPEAT_KEY = 'shadowRepeatCount';
     const SHADOW_GAP_KEY = 'shadowGapMode';
+
+    function loadSentenceFavs() {
+      try {
+        const raw = localStorage.getItem(SENTENCE_FAV_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(x => x && typeof x.id === 'string' && typeof x.en === 'string');
+      } catch (_) { return []; }
+    }
+    function saveSentenceFavs(arr) {
+      try { localStorage.setItem(SENTENCE_FAV_KEY, JSON.stringify(arr || [])); } catch (_) {}
+    }
+    function sentenceFavId(i) { return `${book}/${base}::${i}`; }
 
     // 状态
     let items = [];
@@ -130,6 +144,10 @@
     let audioBlobPromise = null;
     let usingBlobSrc = false;
     let warnedNoRange = false;
+
+    // 句子清单（收藏）
+    let sentenceFavs = loadSentenceFavs();
+    let sentenceFavSet = new Set(sentenceFavs.map(x => x.id));
 
     // 速率
     const rates = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 0.75, 1.0];
@@ -1132,6 +1150,11 @@
     function render() {
       const html = items.map((it, i) => `
         <div class="sentence" data-idx="${i}">
+          <button class="sentence-fav-btn ${sentenceFavSet.has(sentenceFavId(i)) ? 'active' : ''}" data-idx="${i}" aria-label="${sentenceFavSet.has(sentenceFavId(i)) ? '从清单移除' : '加入清单'}" aria-pressed="${sentenceFavSet.has(sentenceFavId(i))}">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M8 12.027 3.297 14.5l.9-5.243L.1 5.997l5.258-.764L8 0l2.642 5.233 5.258.764-4.097 3.26.9 5.243L8 12.027Z"></path>
+            </svg>
+          </button>
           <button class="reveal-btn" data-idx="${i}" aria-label="显示/隐藏文本">
             <span class="reveal-icon">👁</span>
             <span class="reveal-text">显示</span>
@@ -1143,6 +1166,45 @@
       qs('#sentences').innerHTML = html;
       // 渲染后立即更新听力模式 UI
       updateListenModeUI();
+    }
+
+    function toggleSentenceFav(i) {
+      if (!items || i < 0 || i >= items.length) return;
+      const id = sentenceFavId(i);
+      const existingIdx = sentenceFavs.findIndex(x => x && x.id === id);
+      let added = false;
+      if (existingIdx >= 0) {
+        sentenceFavs.splice(existingIdx, 1);
+        sentenceFavSet.delete(id);
+      } else {
+        const it = items[i] || {};
+        sentenceFavs.push({
+          id,
+          lessonId: `${book}/${base}`,
+          book,
+          base,
+          title: titleEl.textContent || base,
+          sub: subEl.textContent || '',
+          idx: i,
+          start: Number.isFinite(it.start) ? it.start : 0,
+          en: it.en || '',
+          cn: it.cn || '',
+          ts: Date.now()
+        });
+        sentenceFavSet.add(id);
+        added = true;
+      }
+      saveSentenceFavs(sentenceFavs);
+
+      const btn = listEl.querySelector(`.sentence[data-idx="${i}"] .sentence-fav-btn`);
+      if (btn) {
+        const isFav = sentenceFavSet.has(id);
+        btn.classList.toggle('active', isFav);
+        btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+        btn.setAttribute('aria-label', isFav ? '从清单移除' : '加入清单');
+      }
+
+      showNotification(added ? '已加入清单' : '已从清单移除');
     }
 
     function computeEnd(it) {
@@ -1521,6 +1583,16 @@
       if (cur) { cur.classList.add('active'); scheduleScrollTo(cur, manual); }
     }
     listEl.addEventListener('click', e => {
+      // 检查是否点击了收藏按钮
+      const favBtn = e.target.closest('.sentence-fav-btn');
+      if (favBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const clickedIdx = parseInt(favBtn.dataset.idx, 10);
+        toggleSentenceFav(clickedIdx);
+        return;
+      }
+
       // 检查是否点击了显示/隐藏按钮
       const revealBtn = e.target.closest('.reveal-btn');
       if (revealBtn) {

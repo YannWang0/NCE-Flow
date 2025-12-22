@@ -259,6 +259,11 @@ body{
   max-width:var(--content-max);
   margin:0 auto;
 }
+.toolbar .topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:calc(8px * var(--lesson-ui-scale, 1));
+}
 .toolbar .seg-wrap{
   flex:1;
   margin:0;
@@ -330,6 +335,84 @@ body{
   border:2px solid var(--text);
   box-shadow:0 6px 20px rgba(0,0,0,0.2);
   padding:19px; /* 减1px以补偿2px边框 */
+}
+.sentence-fav-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:32px;
+  height:32px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  color:var(--muted);
+  border:none;
+  outline:none;
+  border-radius:8px;
+  box-shadow:none;
+  opacity:0;
+  transition:all .2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor:pointer;
+  padding:0;
+  margin:0;
+  z-index:4;
+}
+.sentence:hover .sentence-fav-btn{opacity:0.5}
+.sentence-fav-btn:hover{
+  opacity:1;
+  color:var(--text);
+  background:var(--surface);
+  transform:scale(1.1);
+}
+.sentence-fav-btn.active{
+  opacity:1;
+  color:var(--text);
+}
+.sentence-fav-btn.active:hover{background:var(--surface)}
+.sentence-fav-btn svg{width:18px;height:18px;fill:currentColor}
+
+/* Favorites page: keep remove button hidden by default */
+body.favorites-page .sentence-fav-btn.active{opacity:0}
+body.favorites-page .fav-item.active .sentence-fav-btn,
+body.favorites-page .fav-item.active .sentence-fav-btn{opacity:0.9}
+.fav-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:8px;
+  opacity:0;
+  transition:opacity .2s ease;
+}
+.sentence:hover .fav-actions{opacity:1}
+.sentence.active .fav-actions{opacity:1}
+.sentence-jump-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:28px;
+  padding:0 10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--muted);
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:transform .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
+  font-size:12px;
+}
+.sentence-jump-btn svg{width:16px;height:16px;fill:currentColor}
+.sentence-jump-btn:hover{transform:translateY(-1px); color:var(--text); box-shadow:var(--shadow-hover)}
+.fav-meta{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35}
+.empty-state{
+  max-width:var(--content-max);
+  margin:18px auto;
+  padding:16px;
+  border:1px dashed var(--border);
+  border-radius:var(--radius);
+  background:var(--surface);
+  color:var(--muted);
+  text-align:center;
 }
 .en{font-weight:600;font-size:1.1rem;line-height:1.5;color:var(--text)}
 .cn{font-size:0.9rem;color:var(--muted);margin-top:8px;line-height:1.4}
@@ -441,7 +524,7 @@ body{
   display: inline-flex;
   position: absolute;
   top: 10px;
-  right: 12px;
+  left: 12px;
   padding: 4px 10px;
   font-size: 0.75rem;
   color: var(--muted);
@@ -585,10 +668,45 @@ body.lesson-page .pwa-prompt{
   bottom:calc(20px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
 }
 
+/* Favorites page: keep content above bottom bar */
+body.favorites-page{
+  --lesson-ui-scale:1.05;
+  --lesson-bottom-bar-h:calc(64px * var(--lesson-ui-scale));
+}
+body.favorites-page .container{
+  padding-bottom:calc(var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+}
+
 /* Custom Audio Player */
 .custom-player{display:flex; align-items:center; gap:8px; flex:1; height:var(--control-h); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0 12px; box-shadow:var(--shadow); transition:all .2s ease;}
 .custom-player:hover{box-shadow:var(--shadow-hover);}
 .custom-player audio{display:none;}
+
+/* Favorites page: TTS bar layout */
+body.favorites-page .tts-player{
+  justify-content:center;
+  flex-wrap:wrap;
+  row-gap:8px;
+}
+
+@media (max-width: 560px){
+  body.favorites-page .player .back-inline{display:inline-flex}
+}
+
+/* Favorites page: shrink bottom bar to content */
+body.favorites-page .bottom-player-bar{
+  width:auto;
+}
+body.favorites-page .bottom-player-bar .player{
+  width:auto;
+  max-width:none;
+  justify-content:center;
+}
+body.favorites-page .bottom-player-bar .custom-player.tts-player{
+  flex:0 0 auto;
+  width:fit-content;
+  max-width:calc(100vw - 24px);
+}
 
 /* Play/Pause Button */
 .play-btn{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; background:transparent; border:none; color:var(--text); cursor:pointer; padding:0; transition:all .2s ease;}
@@ -1303,6 +1421,25 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 }
 .settings-footer{display:flex; justify-content:space-between; padding:6px}
 .settings-control #modeToggle{display:none}
+
+.tts-select{
+  width:100%;
+  height:36px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--surface);
+  color:var(--text);
+  padding:0 10px;
+  font-size:13px;
+}
+.tts-select:focus{outline:none; border-color:var(--text); box-shadow:var(--shadow);}
+.ai-current{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg);
+}
+.ai-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
 
 /* Full width settings group */
 .settings-group.full-width {

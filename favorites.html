@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NCE Flow">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>清单 - NCE Flow</title>
+  <link rel="stylesheet" href="assets/styles.css">
+
+  <script src="assets/app.js" defer></script>
+  <script src="assets/favorites.js" defer></script>
+
+  <!-- 主题切换逻辑 - 使用 class-based 方法 -->
+  <script>
+    (function() {
+      if (!window.matchMedia) return;
+
+      const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      const applyTheme = function(isDark) {
+        if (!document.body) return;
+
+        document.body.classList.remove('dark-theme', 'light-theme');
+        document.body.classList.add(isDark ? 'dark-theme' : 'light-theme');
+
+        const originalDisplay = document.body.style.display;
+        document.body.style.display = 'none';
+        void document.body.offsetHeight;
+        document.body.style.display = originalDisplay;
+
+        document.body.style.transform = 'translateZ(0)';
+        setTimeout(() => { document.body.style.transform = ''; }, 0);
+      };
+
+      const handleChange = function(e) { applyTheme(e.matches); };
+
+      if (colorSchemeQuery.addEventListener) colorSchemeQuery.addEventListener('change', handleChange);
+      else if (colorSchemeQuery.addListener) colorSchemeQuery.addListener(handleChange);
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { applyTheme(colorSchemeQuery.matches); });
+      } else {
+        applyTheme(colorSchemeQuery.matches);
+      }
+    })();
+  </script>
+</head>
+<body class="favorites-page">
+  <canvas id="bg-canvas"></canvas>
+  <div class="container">
+    <header class="hero">
+      <h1 id="favTitle">清单</h1>
+      <p id="favSub" class="muted"></p>
+    </header>
+
+    <div class="toolbar">
+      <div class="topbar-inner">
+        <a id="backBtn" class="back-inline" href="index.html#NCE1" aria-label="返回">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L4.47 8.53a1.25 1.25 0 0 1 0-1.77l4.25-4.25a.75.75 0 0 1 1.06 0Z"></path></svg>
+          返回
+        </a>
+        <div class="seg-wrap">
+          <div id="langTabs" class="segmented tabs" role="tablist" aria-label="语言">
+            <button class="seg" data-mode="en">EN</button>
+            <button class="seg" data-mode="bi">EN+CN</button>
+            <button class="seg" data-mode="cn">CN</button>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="aiBtn" class="back-inline" type="button" aria-label="AI 面板" title="AI 面板">AI</button>
+          <button id="clearBtn" class="back-inline" type="button" aria-label="清空清单" title="清空清单">清空</button>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <section class="sentences" id="favSentences"></section>
+    </main>
+
+    <footer>
+      <p class="repo">
+        <a class="gh-link" href="https://github.com/luzhenhua/NCE-Flow" target="_blank" rel="noopener" aria-label="GitHub repository">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36 .09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg>
+        </a>
+      </p>
+      <p class="byline">Designed &amp; Maintained by <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">Luzhenhua</a></p>
+      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">版本 1.7.0</a></p>
+      <div class="footer-actions">
+        <a class="footer-btn" href="donate.html">捐助</a>
+        <a class="footer-btn" href="about.html">关于</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Bottom TTS bar -->
+  <div class="bottom-player-bar" role="region" aria-label="清单播放器">
+    <div class="player">
+      <div class="custom-player tts-player">
+        <button id="ttsPrev" class="play-btn" type="button" aria-label="上一句" title="上一句">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6V5zm3 7 13 7V5l-13 7z"/></svg>
+        </button>
+        <button id="ttsPlayPause" class="play-btn" type="button" aria-label="播放/暂停" title="播放/暂停">
+          <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+        </button>
+        <button id="ttsNext" class="play-btn" type="button" aria-label="下一句" title="下一句">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2V5zM2 12l13 7V5L2 12z"/></svg>
+        </button>
+        <div class="time-display" id="ttsPos">0/0</div>
+        <button id="ttsLoop" class="back-inline" type="button" aria-label="循环模式" title="循环模式">循环：关</button>
+        <button id="ttsRate" class="back-inline" type="button" aria-label="倍速" title="倍速">1.0x</button>
+        <button id="ttsVoiceBtn" class="back-inline" type="button" aria-label="选择音色" title="选择音色">音色</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TTS Settings -->
+  <div id="ttsOverlay" class="settings-overlay" hidden></div>
+  <div id="ttsPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsTitle" hidden>
+    <div class="settings-header">
+      <h2 id="ttsTitle">清单播放设置</h2>
+      <button id="ttsClose" class="icon-btn" aria-label="关闭" title="关闭">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M5 5 L15 15 M15 5 L5 15"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">音色</div>
+        </div>
+        <select id="ttsVoice" class="tts-select" aria-label="音色"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loop Settings -->
+  <div id="ttsLoopOverlay" class="settings-overlay" hidden></div>
+  <div id="ttsLoopPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsLoopTitle" hidden>
+    <div class="settings-header">
+      <h2 id="ttsLoopTitle">循环模式</h2>
+      <button id="ttsLoopClose" class="icon-btn" aria-label="关闭" title="关闭">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M5 5 L15 15 M15 5 L5 15"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">选择模式</div>
+        </div>
+        <select id="ttsLoopSelect" class="tts-select" aria-label="循环模式">
+          <option value="off">关（只播放当前一句）</option>
+          <option value="one">单句循环</option>
+          <option value="all">全清单循环</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rate Settings -->
+  <div id="ttsRateOverlay" class="settings-overlay" hidden></div>
+  <div id="ttsRatePanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="ttsRateTitle" hidden>
+    <div class="settings-header">
+      <h2 id="ttsRateTitle">播放速度</h2>
+      <button id="ttsRateClose" class="icon-btn" aria-label="关闭" title="关闭">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M5 5 L15 15 M15 5 L5 15"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">选择倍速</div>
+        </div>
+        <select id="ttsRateSelect" class="tts-select" aria-label="播放速度"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Drawer (placeholder, default hidden) -->
+  <div id="aiOverlay" class="settings-overlay" hidden></div>
+  <div id="aiPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle" hidden>
+    <div class="settings-header">
+      <h2 id="aiTitle">AI 助手</h2>
+      <button id="aiClose" class="icon-btn" aria-label="关闭" title="关闭">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M5 5 L15 15 M15 5 L5 15"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-group full-width">
+        <div class="settings-header-row">
+          <div class="settings-label">当前句子</div>
+        </div>
+        <div id="aiCurrent" class="ai-current"></div>
+        <div class="ai-actions">
+          <button id="aiCopySentence" class="back-inline" type="button">复制句子</button>
+          <button id="aiCopyPrompt" class="back-inline" type="button">复制提示词</button>
+        </div>
+        <div class="settings-desc" style="margin-top:10px">
+          AI 功能后续可接入；目前提供一键复制句子/提示词，方便粘贴到你常用的 AI 工具。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Particle Background Animation
+    (function(){
+      const cvs = document.getElementById('bg-canvas');
+      if (!cvs) return;
+
+      const ctx = cvs.getContext('2d'),
+            dpr = window.devicePixelRatio || 1;
+      let w, h, particles = [];
+
+      function resize(){
+        w = cvs.width  = innerWidth  * dpr;
+        h = cvs.height = innerHeight * dpr;
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr, dpr);
+        cvs.style.width  = innerWidth  + 'px';
+        cvs.style.height = innerHeight + 'px';
+      }
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor(){
+          this.x = Math.random() * innerWidth;
+          this.y = Math.random() * innerHeight;
+          this.vx = (Math.random() - .5) * .3;
+          this.vy = (Math.random() - .5) * .3;
+          this.r = Math.random() * 1.2 + .5;
+        }
+        update(){
+          this.x += this.vx;
+          this.y += this.vy;
+          if(this.x < 0 || this.x > innerWidth) this.vx *= -1;
+          if(this.y < 0 || this.y > innerHeight) this.vy *= -1;
+        }
+        draw(){
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+          ctx.fillStyle = isDark() ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
+          ctx.fill();
+        }
+      }
+
+      function isDark(){
+        return document.body.classList.contains('dark-theme');
+      }
+
+      function drawLines(){
+        for(let i=0;i<particles.length;i++){
+          for(let j=i+1;j<particles.length;j++){
+            const dx = particles[i].x - particles[j].x,
+                  dy = particles[i].y - particles[j].y,
+                  dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 100){
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = isDark()
+                ? `rgba(255,255,255,${1-dist/100})`
+                : `rgba(0,0,0,${.5-dist/200})`;
+              ctx.lineWidth = .5;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function init(){
+        resize();
+        particles = Array.from({length: Math.floor(innerWidth*innerHeight/18000)}, ()=>new Particle());
+        animate();
+      }
+
+      function animate(){
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        particles.forEach(p=>{p.update();p.draw();});
+        drawLines();
+        requestAnimationFrame(animate);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
