@@ -107,14 +107,58 @@
       setPlayIcon(ttsState === 'playing');
     }
 
-    function pickDefaultVoice(voices) {
+    const NOVELTY_VOICE_RE = /\b(bad news|good news|bahh|bells|boing|bubbles|cellos|jester|junior|whisper|trinoids?)\b/i;
+    const PREFERRED_VOICE_NAMES = [
+      'Siri',
+      'Samantha',
+      'Alex',
+      'Daniel',
+      'Karen',
+      'Tessa',
+      'Moira',
+      'Oliver',
+      'Arthur',
+      'Aaron',
+      'Allison',
+      'Ava'
+    ];
+    function isNoveltyVoiceName(name) {
+      const n = String(name || '').trim();
+      if (!n) return false;
+      return NOVELTY_VOICE_RE.test(n);
+    }
+    function preferredVoiceBonus(name) {
+      const n = String(name || '');
+      const idx = PREFERRED_VOICE_NAMES.findIndex(k => k && (n === k || n.startsWith(k + ' ')));
+      return idx >= 0 ? (220 - idx * 10) : 0;
+    }
+    function voiceScore(v, { preferredLangPrefix = 'en' } = {}) {
+      if (!v) return -1e9;
+      const name = String(v.name || '');
+      const lang = String(v.lang || '').toLowerCase();
+      let s = 0;
+      if (lang.startsWith(preferredLangPrefix)) s += 120;
+      else if (preferredLangPrefix === 'en' && lang.startsWith('en')) s += 120;
+      if (v.localService) s += 30;
+      if (v.default) s += 20;
+      s += preferredVoiceBonus(name);
+      if (isNoveltyVoiceName(name)) s -= 1000;
+      return s;
+    }
+
+    function pickDefaultVoice(voices, { preferredLangPrefix = 'en' } = {}) {
       if (!voices?.length) return null;
       if (ttsVoiceName) {
         const found = voices.find(v => v && v.name === ttsVoiceName);
         if (found) return found;
       }
-      const en = voices.find(v => String(v?.lang || '').toLowerCase().startsWith('en'));
-      return en || voices[0] || null;
+      let best = null;
+      let bestScore = -1e9;
+      for (const v of voices) {
+        const s = voiceScore(v, { preferredLangPrefix });
+        if (s > bestScore) { bestScore = s; best = v; }
+      }
+      return best || voices[0] || null;
     }
 
     function refreshVoiceSelect() {
@@ -132,22 +176,25 @@
       }
       ttsVoiceSelect.disabled = false;
 
+      // 如果之前保存的是“搞怪音色”，自动回退为推荐音色
+      if (ttsVoiceName && isNoveltyVoiceName(ttsVoiceName)) {
+        ttsVoiceName = '';
+        try { localStorage.removeItem(TTS_VOICE_KEY); } catch (_) {}
+      }
+
+      const preferredLangPrefix = 'en';
       const sorted = ttsVoices.slice().sort((a, b) => {
-        const la = String(a?.lang || '');
-        const lb = String(b?.lang || '');
-        const ea = la.toLowerCase().startsWith('en') ? 0 : 1;
-        const eb = lb.toLowerCase().startsWith('en') ? 0 : 1;
-        if (ea !== eb) return ea - eb;
+        const sa = voiceScore(a, { preferredLangPrefix });
+        const sb = voiceScore(b, { preferredLangPrefix });
+        if (sb !== sa) return sb - sa;
         return String(a?.name || '').localeCompare(String(b?.name || ''));
       });
 
-      const selected = pickDefaultVoice(sorted);
+      const selected = pickDefaultVoice(sorted, { preferredLangPrefix });
       if (selected) {
         ttsVoice = selected;
-        if (!ttsVoiceName) {
-          ttsVoiceName = selected.name;
-          try { localStorage.setItem(TTS_VOICE_KEY, ttsVoiceName); } catch (_) {}
-        }
+        // 默认音色不自动写入 localStorage，避免在不同设备上“锁定”怪异默认值
+        if (!ttsVoiceName) ttsVoiceName = selected.name;
       }
 
       ttsVoiceSelect.innerHTML = sorted.map(v => {
