@@ -671,7 +671,8 @@ body.lesson-page .pwa-prompt{
 /* Favorites page: keep content above bottom bar */
 body.favorites-page{
   --lesson-ui-scale:1.05;
-  --lesson-bottom-bar-h:calc(64px * var(--lesson-ui-scale));
+  /* 允许底部播放条在手机端换行，预留更高空间 */
+  --lesson-bottom-bar-h:calc(104px * var(--lesson-ui-scale));
 }
 body.favorites-page .container{
   padding-bottom:calc(var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
@@ -686,7 +687,7 @@ body.favorites-page .container{
 body.favorites-page .tts-player{
   justify-content:center;
   flex-wrap:wrap;
-  row-gap:8px;
+  row-gap:6px;
 }
 
 @media (max-width: 560px){
@@ -706,6 +707,11 @@ body.favorites-page .bottom-player-bar .custom-player.tts-player{
   flex:0 0 auto;
   width:fit-content;
   max-width:calc(100vw - 24px);
+}
+body.favorites-page .bottom-player-bar .custom-player.tts-player{
+  height:auto;
+  min-height:calc((var(--control-h) + 4px) * var(--lesson-ui-scale, 1));
+  padding:8px 12px;
 }
 
 /* Play/Pause Button */
