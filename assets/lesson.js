@@ -1570,12 +1570,57 @@
     // 高亮 & 跟随
     // --------------------------
     let scrollTimer = 0;
+    let followAnimRaf = 0;
+    function cancelFollowAnim() {
+      if (followAnimRaf) { cancelAnimationFrame(followAnimRaf); followAnimRaf = 0; }
+    }
+    function prefersReducedMotion() {
+      try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
+    }
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function getScrollY() { return window.scrollY || document.documentElement.scrollTop || 0; }
+    function maxScrollY() {
+      const doc = document.documentElement;
+      const body = document.body;
+      const h = Math.max(doc?.scrollHeight || 0, body?.scrollHeight || 0);
+      return Math.max(0, h - window.innerHeight);
+    }
+    function targetScrollYFor(el) {
+      const rect = el.getBoundingClientRect();
+      const y = getScrollY();
+      const centerOffset = (window.innerHeight / 2) - (rect.height / 2);
+      return clamp(y + rect.top - centerOffset, 0, maxScrollY());
+    }
+    function smoothScrollToY(targetY, { durationMs = 260 } = {}) {
+      cancelFollowAnim();
+      const startY = getScrollY();
+      const delta = targetY - startY;
+      if (Math.abs(delta) < 4) return;
+      const start = performance.now();
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      const step = (now) => {
+        const t = clamp((now - start) / durationMs, 0, 1);
+        const nextY = startY + delta * easeOutCubic(t);
+        window.scrollTo(0, nextY);
+        if (t < 1) followAnimRaf = requestAnimationFrame(step);
+        else followAnimRaf = 0;
+      };
+      followAnimRaf = requestAnimationFrame(step);
+    }
     function scheduleScrollTo(el, manual){
       if (!el) return;
       if (scrollTimer) { clearTimeout(scrollTimer); scrollTimer = 0; }
       if (!autoFollow) return;
+      cancelFollowAnim();
       if (manual) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_) {} return; }
-      scrollTimer = setTimeout(() => { try { el.scrollIntoView({ behavior: 'auto', block: 'center' }); } catch(_) {} }, 420);
+      if (prefersReducedMotion()) { try { el.scrollIntoView({ behavior: 'auto', block: 'center' }); } catch(_) {} return; }
+      scrollTimer = setTimeout(() => {
+        try {
+          const y = targetScrollYFor(el);
+          // scrollTo({behavior:'smooth'}) 在部分浏览器/场景会被降级，手写动画更一致
+          smoothScrollToY(y, { durationMs: 280 });
+        } catch(_) {}
+      }, 240);
     }
     function highlight(i, manual=false) {
       const prev = listEl.querySelector('.sentence.active'); if (prev) prev.classList.remove('active');
