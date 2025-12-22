@@ -30,7 +30,6 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const backBtn = qs('#backBtn');
-    const clearBtn = qs('#clearBtn');
     const favSub = qs('#favSub');
     const listEl = qs('#favSentences');
 
@@ -51,6 +50,7 @@
     const ttsVoiceSelect = qs('#ttsVoice');
     const ttsLoopSelect = qs('#ttsLoopSelect');
     const ttsRateSelect = qs('#ttsRateSelect');
+    const clearListBtn = qs('#clearListBtn');
 
     let favs = loadFavs();
     let currentIndex = favs.length ? 0 : -1;
@@ -429,8 +429,8 @@
         else location.href = backBtn.getAttribute('href') || 'index.html#NCE1';
       });
     }
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
+    if (clearListBtn) {
+      clearListBtn.addEventListener('click', () => {
         if (!favs.length) return;
         const ok = confirm('确定清空清单吗？此操作不可撤销。');
         if (!ok) return;
@@ -442,6 +442,7 @@
         renderList();
         updateTtsPos();
         syncAiCurrent();
+        closePanel(ttsOverlay, ttsPanel);
       });
     }
 
