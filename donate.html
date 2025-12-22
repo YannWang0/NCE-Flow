@@ -95,6 +95,10 @@
         <div class="donor-list-section">
           <div class="donor-list-header">
             <h2 class="donor-list-title">捐助名单</h2>
+            <div class="segmented tiny donate-sort" role="tablist" aria-label="排序">
+              <button class="seg active" type="button" data-sort="time" aria-pressed="true">时间</button>
+              <button class="seg" type="button" data-sort="amount" aria-pressed="false">金额</button>
+            </div>
           </div>
 
           <div class="donate-table-wrap">
@@ -186,6 +190,75 @@
           .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
       });
     }
+  </script>
+
+  <script>
+    (function(){
+      const table = document.querySelector('.donate-table');
+      const tabs = document.querySelectorAll('.donate-sort [data-sort]');
+      const tbody = table?.querySelector('tbody');
+      if (!table || !tbody || !tabs.length) return;
+
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const getAmount = (tr) => {
+        const t = tr.querySelector('.donate-amount')?.textContent || '';
+        const n = parseFloat(t.replace(/[^\d.]/g, ''));
+        return Number.isFinite(n) ? n : 0;
+      };
+      const getDate = (tr) => {
+        const t = tr.querySelector('.donate-date')?.textContent || '';
+        const ts = Date.parse(t);
+        return Number.isFinite(ts) ? ts : 0;
+      };
+
+      rows.forEach((tr, i) => {
+        tr.dataset.amount = String(getAmount(tr));
+        tr.dataset.date = String(getDate(tr));
+        tr.dataset.idx = String(i);
+      });
+
+      const sortAndRender = (mode) => {
+        const sorted = rows.slice().sort((a, b) => {
+          const ad = parseFloat(a.dataset.date || '0') || 0;
+          const bd = parseFloat(b.dataset.date || '0') || 0;
+          const aa = parseFloat(a.dataset.amount || '0') || 0;
+          const ba = parseFloat(b.dataset.amount || '0') || 0;
+          const ai = parseInt(a.dataset.idx || '0', 10) || 0;
+          const bi = parseInt(b.dataset.idx || '0', 10) || 0;
+
+          if (mode === 'amount') {
+            if (ba !== aa) return ba - aa;
+            if (bd !== ad) return bd - ad;
+            return ai - bi;
+          }
+          // time (default): newest first
+          if (bd !== ad) return bd - ad;
+          if (ba !== aa) return ba - aa;
+          return ai - bi;
+        });
+        sorted.forEach(tr => tbody.appendChild(tr));
+      };
+
+      const setActive = (mode) => {
+        tabs.forEach(btn => {
+          const on = btn.dataset.sort === mode;
+          btn.classList.toggle('active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      };
+
+      // Default: time desc
+      sortAndRender('time');
+      setActive('time');
+
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.sort === 'amount' ? 'amount' : 'time';
+          sortAndRender(mode);
+          setActive(mode);
+        });
+      });
+    })();
   </script>
 </body>
 </html>
