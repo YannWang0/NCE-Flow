@@ -137,34 +137,46 @@
       </button>
     </div>
     <div class="settings-body">
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
-          <div class="settings-label">循环</div>
+      <div class="settings-group">
+        <div class="settings-left">
+          <div class="settings-label">循环模式</div>
+          <div class="settings-desc">选择是否单句循环或循环整个清单。</div>
         </div>
-        <select id="ttsLoopSelect" class="tts-select" aria-label="循环模式">
-          <option value="off">关（只播放当前一句）</option>
-          <option value="one">单句循环</option>
-          <option value="all">全清单循环</option>
-        </select>
-      </div>
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
-          <div class="settings-label">倍速</div>
+        <div class="settings-control">
+          <select id="ttsLoopSelect" class="tts-select" aria-label="循环模式">
+            <option value="off">关（只播放当前一句）</option>
+            <option value="one">单句循环</option>
+            <option value="all">全清单循环</option>
+          </select>
         </div>
-        <select id="ttsRateSelect" class="tts-select" aria-label="播放速度"></select>
       </div>
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
+
+      <div class="settings-group">
+        <div class="settings-left">
+          <div class="settings-label">播放速度</div>
+          <div class="settings-desc">选择朗读的倍速。</div>
+        </div>
+        <div class="settings-control">
+          <select id="ttsRateSelect" class="tts-select" aria-label="播放速度"></select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-left">
           <div class="settings-label">音色</div>
+          <div class="settings-desc">不同浏览器/设备音色可能不同。</div>
         </div>
-        <select id="ttsVoice" class="tts-select" aria-label="音色"></select>
+        <div class="settings-control">
+          <select id="ttsVoice" class="tts-select" aria-label="音色"></select>
+        </div>
       </div>
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
+
+      <div class="settings-group">
+        <div class="settings-left">
           <div class="settings-label">清单</div>
+          <div class="settings-desc">清空清单会移除所有已收藏句子。</div>
         </div>
-        <div class="settings-desc">清空清单会移除所有已收藏句子。</div>
-        <div class="settings-control" style="margin-top:10px; justify-content:flex-end;">
+        <div class="settings-control">
           <button id="clearListBtn" class="back-inline" type="button" aria-label="清空清单" title="清空清单">清空清单</button>
         </div>
       </div>

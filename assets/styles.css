@@ -1440,8 +1440,8 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
 .settings-control #modeToggle{display:none}
 
 .tts-select{
-  width:100%;
-  height:36px;
+  min-width:180px;
+  height:var(--control-h);
   border:1px solid var(--border);
   border-radius:8px;
   background:var(--surface);
@@ -1457,6 +1457,14 @@ body, .card, .lesson-item, .sentence{ transition: background-color .35s ease, co
   background:var(--bg);
 }
 .ai-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+
+/* Favorites: settings layout align with lesson style */
+body.favorites-page #ttsPanel .settings-group{align-items:center;}
+@media (max-width: 480px){
+  body.favorites-page #ttsPanel .settings-group{flex-direction:column; align-items:stretch;}
+  body.favorites-page #ttsPanel .settings-control{justify-content:flex-end;}
+  body.favorites-page #ttsPanel .tts-select{min-width:0; width:100%;}
+}
 
 /* Full width settings group */
 .settings-group.full-width {
