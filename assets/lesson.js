@@ -1627,6 +1627,93 @@
       const cur = listEl.querySelector(`.sentence[data-idx="${i}"]`);
       if (cur) { cur.classList.add('active'); scheduleScrollTo(cur, manual); }
     }
+
+    // --------------------------
+    // iOS 自动播放限制：恢复播放提示
+    // --------------------------
+    let resumePlayPrompt = null;
+    function hideResumePlayPrompt() {
+      if (!resumePlayPrompt) return;
+      try { resumePlayPrompt.remove(); } catch (_) {}
+      resumePlayPrompt = null;
+    }
+    function showResumePlayPrompt() {
+      if (resumePlayPrompt) return;
+      const wrap = document.createElement('div');
+      wrap.id = 'resumePlayPrompt';
+      wrap.style.cssText = `
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(14px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
+        z-index: 850;
+      `;
+      const btn = document.createElement('button');
+      btn.className = 'back-inline';
+      btn.type = 'button';
+      btn.textContent = '点一下继续播放';
+      btn.style.cssText = `
+        backdrop-filter: saturate(130%) blur(10px);
+        -webkit-backdrop-filter: saturate(130%) blur(10px);
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+      `;
+      wrap.appendChild(btn);
+      document.body.appendChild(wrap);
+      resumePlayPrompt = wrap;
+
+      const onClick = () => {
+        if (isIOSLike && !iosUnlocked) unlockAudioSync();
+        let scheduled = false;
+        const onPlaying = () => {
+          if (scheduled) return;
+          scheduled = true;
+          hideResumePlayPrompt();
+          scheduleAdvance();
+        };
+        audio.addEventListener('playing', onPlaying, { once: true });
+        try {
+          const p = audio.play();
+          if (p && p.catch) {
+            p.catch(() => {
+              audio.removeEventListener('playing', onPlaying);
+              // 仍被拦截则保留提示
+            });
+          }
+        } catch (_) {
+          audio.removeEventListener('playing', onPlaying);
+        }
+      };
+      btn.addEventListener('click', onClick);
+    }
+    function attemptAutoplayAndSchedule() {
+      let scheduled = false;
+      const onPlaying = () => {
+        if (scheduled) return;
+        scheduled = true;
+        hideResumePlayPrompt();
+        scheduleAdvance();
+      };
+      audio.addEventListener('playing', onPlaying, { once: true });
+      try {
+        const p = audio.play();
+        if (p && p.catch) {
+          p.catch(() => {
+            audio.removeEventListener('playing', onPlaying);
+            showResumePlayPrompt();
+          });
+        }
+      } catch (_) {
+        audio.removeEventListener('playing', onPlaying);
+        showResumePlayPrompt();
+      }
+      // 兜底：部分 iOS 会静默失败（无 reject 但保持 paused）
+      setTimeout(() => {
+        if (!scheduled && audio.paused) {
+          try { audio.removeEventListener('playing', onPlaying); } catch (_) {}
+          showResumePlayPrompt();
+        }
+      }, 600);
+    }
     listEl.addEventListener('click', e => {
       // 检查是否点击了收藏按钮
       const favBtn = e.target.closest('.sentence-fav-btn');
@@ -1934,8 +2021,7 @@
             if (readMode === 'shadow') shadowRepeatRemaining = shadowRepeatTotal;
             highlight(targetIdx, false);
             if (sessionStorage.getItem('nce_resume_play')==='1'){
-              const p = audio.play(); if (p && p.catch) p.catch(()=>{});
-              scheduleAdvance();
+              attemptAutoplayAndSchedule();
             }
           }
         }
