@@ -178,10 +178,11 @@
     let loopReplayPending = false;  // 标记是否正在等待循环重播
     let playSeq = 0;               // 防止异步 seek 回调串线
 
-    // iOS 特有状态
-    let iosUnlocked = false;         // 是否已“解锁音频”
-    let metadataReady = false;       // 是否已 loadedmetadata
-    let _userVolume = Math.max(0, Math.min(1, audio.volume || 1));
+  // iOS 特有状态
+  let iosUnlocked = false;         // 是否已“解锁音频”
+  let iosUnlockPauseTimer = 0;     // 解锁用的延迟 pause（可取消）
+  let metadataReady = false;       // 是否已 loadedmetadata
+  let _userVolume = Math.max(0, Math.min(1, audio.volume || 1));
 
     // 音频 seek 兼容：当服务器不支持 Range 时，回退为 Blob URL（可在本地 http.server 正常点读）
     let audioBlobUrl = '';
@@ -282,8 +283,19 @@
         const p = audio.play();        // 在同一用户手势栈内发起
         iosUnlocked = true;
         // 立即排队暂停与还原 mute（避免可闻 blip）
-        setTimeout(() => { try { audio.pause(); } catch(_) {} audio.muted = false; }, 0);
+        if (iosUnlockPauseTimer) clearTimeout(iosUnlockPauseTimer);
+        iosUnlockPauseTimer = setTimeout(() => {
+          iosUnlockPauseTimer = 0;
+          try { audio.pause(); } catch(_) {}
+          audio.muted = false;
+        }, 0);
       } catch (_) { iosUnlocked = false; }
+    }
+    function cancelIOSUnlockPause() {
+      if (!iosUnlockPauseTimer) return;
+      clearTimeout(iosUnlockPauseTimer);
+      iosUnlockPauseTimer = 0;
+      try { audio.muted = false; } catch (_) {}
     }
     if (isIOSLike) {
       const evs = ['pointerdown','touchstart','click'];
@@ -1709,26 +1721,65 @@
       resumePlayPrompt = wrap;
 
       const onClick = () => {
-        if (isIOSLike && !iosUnlocked) unlockAudioSync();
-        let scheduled = false;
-        const onPlaying = () => {
-          if (scheduled) return;
-          scheduled = true;
-          hideResumePlayPrompt();
-          scheduleAdvance();
-        };
+        // 可能存在“解锁音频”设置的 0ms pause，点击继续播放时需要取消，避免把本次播放也暂停掉
+        if (isIOSLike) cancelIOSUnlockPause();
+
+        // 开启“跳过开头”时，新页面恢复的 currentTime 在部分 iOS 设备上会被忽略（仍为 0）
+        // 这里采用：同一点击栈内先发起 play（满足用户手势要求），再在播放后进行 seek 到目标时间
+        let targetIdx = (Number.isInteger(idx) && idx >= 0) ? idx : firstContentIndex;
+        if (readMode === 'shadow' && targetIdx < shadowStartIndex) targetIdx = shadowStartIndex;
+        if (skipIntro && targetIdx < firstContentIndex) targetIdx = firstContentIndex;
+        const desired = (items && items[targetIdx] && Number.isFinite(items[targetIdx].start)) ? items[targetIdx].start : Math.max(0, audio.currentTime || 0);
+
+        // 同步对齐状态（避免 scheduleAdvance 使用旧 idx）
+        if (items && items.length && targetIdx >= 0 && targetIdx < items.length) {
+          idx = targetIdx;
+          segmentEnd = endFor(items[targetIdx]);
+          highlight(targetIdx, false);
+        }
+
+        const onPlaying = () => { hideResumePlayPrompt(); };
         audio.addEventListener('playing', onPlaying, { once: true });
+
         try {
+          if (desired > 0.05) audio.muted = true; // 避免从 0 到目标时间的可闻跳动
           const p = audio.play();
           if (p && p.catch) {
             p.catch(() => {
               audio.removeEventListener('playing', onPlaying);
+              try { audio.muted = false; } catch (_) {}
               // 仍被拦截则保留提示
             });
           }
         } catch (_) {
           audio.removeEventListener('playing', onPlaying);
+          try { audio.muted = false; } catch (_) {}
         }
+
+        (async () => {
+          try {
+            if (!Number.isFinite(desired) || desired <= 0.01) { raf2(() => { audio.muted = false; scheduleAdvance(); }); return; }
+            await ensureMetadata();
+            const cur = Math.max(0, audio.currentTime || 0);
+            if (Math.abs(cur - desired) < 0.15) { raf2(() => { audio.muted = false; scheduleAdvance(); }); return; }
+
+            let done = false;
+            const finish = () => {
+              if (done) return;
+              done = true;
+              try { audio.removeEventListener('seeked', finish); } catch (_) {}
+              try { audio.removeEventListener('canplay', finish); } catch (_) {}
+              raf2(() => { audio.muted = false; scheduleAdvance(); });
+            };
+            audio.addEventListener('seeked', finish, { once: true });
+            audio.addEventListener('canplay', finish, { once: true });
+            fastSeekTo(desired);
+            setTimeout(finish, 900);
+          } catch (_) {
+            try { audio.muted = false; } catch (_) {}
+            try { scheduleAdvance(); } catch (_) {}
+          }
+        })();
       };
       wrap.addEventListener('click', onClick);
     }
