@@ -203,7 +203,8 @@
 
     // 读取模式/跟随/播完后
     let readMode = localStorage.getItem(MODE_KEY) || 'continuous'; // 'continuous' | 'single' | 'listen' | 'shadow'
-    let autoFollow = localStorage.getItem(FOLLOW_KEY) === 'true'; // 默认关闭自动跟随
+    const storedAutoFollow = localStorage.getItem(FOLLOW_KEY);
+    let autoFollow = storedAutoFollow === null ? true : storedAutoFollow === 'true'; // 默认开启自动跟随
     let afterPlay = localStorage.getItem(AFTER_PLAY_KEY) || 'none'; // 'none' | 'single' | 'all' | 'next'
     let revealedSentences = new Set(); // 听读模式下已显示的句子索引
     let skipIntro = localStorage.getItem(SKIP_INTRO_KEY) === 'true'; // 是否跳过开头
@@ -240,6 +241,12 @@
 
 	      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
 	    }
+
+      // 自动续集时强制开启自动跟随（避免续播后定位生硬）
+      if (afterPlay === 'next' && !autoFollow) {
+        autoFollow = true;
+        try { localStorage.setItem(FOLLOW_KEY, 'true'); } catch(_) {}
+      }
 
 	    // --------------------------
 	    // Back to top button
@@ -587,6 +594,11 @@
       afterPlay = mode;
       try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
       reflectAfterPlay();
+
+      // 自动续集：默认开启自动跟随（用户可再手动关闭，但本次选择会帮你打开）
+      if (afterPlay === 'next' && !autoFollow) {
+        setFollowMode(true);
+      }
     }
     function setSkipIntro(skip) {
       skipIntro = !!skip;
@@ -1193,7 +1205,7 @@
       settingsReset.addEventListener('click', ()=>{
         try{ localStorage.setItem('audioPlaybackRate', DEFAULT_RATE); }catch(_){}
         audio.playbackRate = DEFAULT_RATE;
-        setReadMode('continuous'); setFollowMode(false); setAfterPlay('none'); setSkipIntro(false);
+        setReadMode('continuous'); setFollowMode(true); setAfterPlay('none'); setSkipIntro(false);
         setShadowRepeatCount(2); setShadowGapMode('medium');
         reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro(); reflectShadowSettings();
         showNotification('已恢复默认设置');
