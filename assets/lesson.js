@@ -1684,24 +1684,27 @@
     function showResumePlayPrompt() {
       if (resumePlayPrompt) return;
       const wrap = document.createElement('div');
-      wrap.id = 'resumePlayPrompt';
-      wrap.style.cssText = `
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: calc(14px + var(--lesson-bottom-bar-h) + env(safe-area-inset-bottom));
-        z-index: 850;
-      `;
-      const btn = document.createElement('button');
-      btn.className = 'back-inline';
-      btn.type = 'button';
-      btn.textContent = '点一下继续播放';
-      btn.style.cssText = `
-        backdrop-filter: saturate(130%) blur(10px);
-        -webkit-backdrop-filter: saturate(130%) blur(10px);
-        background: color-mix(in srgb, var(--surface) 92%, transparent);
-      `;
-      wrap.appendChild(btn);
+      wrap.className = 'resume-play-overlay';
+      
+      const card = document.createElement('div');
+      card.className = 'resume-play-card';
+      
+      const icon = document.createElement('div');
+      icon.innerHTML = '<svg class="resume-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      
+      const text = document.createElement('div');
+      text.className = 'resume-play-text';
+      text.textContent = '点一下继续播放';
+      
+      const sub = document.createElement('div');
+      sub.className = 'resume-play-subtext';
+      sub.textContent = '浏览器自动播放已暂停';
+
+      card.appendChild(icon);
+      card.appendChild(text);
+      card.appendChild(sub);
+      wrap.appendChild(card);
+      
       document.body.appendChild(wrap);
       resumePlayPrompt = wrap;
 
@@ -1727,7 +1730,7 @@
           audio.removeEventListener('playing', onPlaying);
         }
       };
-      btn.addEventListener('click', onClick);
+      wrap.addEventListener('click', onClick);
     }
     function attemptAutoplayAndSchedule() {
       let scheduled = false;
