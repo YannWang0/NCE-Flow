@@ -3,7 +3,7 @@
  * 缓存策略：核心文件缓存优先，音频网络优先
  */
 
-const CACHE_NAME = 'nce-flow-v3';
+const CACHE_NAME = 'nce-flow-v1.7.4';
 
 // 核心静态资源（预缓存）
 const PRECACHE_ASSETS = [

@@ -93,6 +93,50 @@
 	    const speedButton = qs('#speed');
 	    const backToTopBtn = qs('#backToTop');
 
+      // --------------------------
+      // 移动端浏览器：自动隐藏上下栏（非 PWA）
+      // --------------------------
+      (function initAutoHideBars(){
+        try {
+          const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator && window.navigator.standalone === true);
+          const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+          if (isStandalone || !isCoarse) return;
+          const body = document.body;
+          if (!body) return;
+
+          let hidden = false;
+          let lastY = window.scrollY || 0;
+          let idleTimer = 0;
+          const HIDE_CLASS = 'ui-bars-hidden';
+
+          const show = () => {
+            if (hidden) { body.classList.remove(HIDE_CLASS); hidden = false; }
+            resetIdle();
+          };
+          const hide = () => {
+            const y = window.scrollY || 0;
+            if (y < 40) return;
+            if (!hidden) { body.classList.add(HIDE_CLASS); hidden = true; }
+          };
+          const resetIdle = () => {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => hide(), 2200);
+          };
+          const onScroll = () => {
+            const y = window.scrollY || 0;
+            const dy = y - lastY;
+            if (Math.abs(dy) < 8) { resetIdle(); lastY = y; return; }
+            if (dy > 0) hide(); else show();
+            lastY = y;
+          };
+
+          window.addEventListener('scroll', onScroll, { passive: true });
+          ['touchstart','pointerdown'].forEach(t => document.addEventListener(t, show, { passive: true }));
+          document.addEventListener('focusin', show, { passive: true });
+          resetIdle();
+        } catch (_) {}
+      })();
+
 	    // 本地存储键
 	    const RECENT_KEY = 'nce_recents';
 	    const LASTPOS_KEY = 'nce_lastpos';

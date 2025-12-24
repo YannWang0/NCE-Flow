@@ -251,6 +251,7 @@ body{
   background:transparent;
   border-bottom:none;
 }
+.toolbar, .bottom-player-bar{transition:opacity .22s ease, transform .22s ease}
 .toolbar .topbar-inner{
   display:flex;
   align-items:center;
@@ -670,6 +671,23 @@ body.favorites-page .fav-item.active .sentence-fav-btn{opacity:0.9}
   padding:0;
   background:transparent;
   border:none;
+}
+
+/* Auto-hide top/bottom bars (mobile browser) */
+body.ui-bars-hidden.lesson-page .toolbar,
+body.ui-bars-hidden.favorites-page .toolbar{
+  opacity:0;
+  transform:translateY(-14px);
+  pointer-events:none;
+}
+body.ui-bars-hidden.lesson-page .bottom-player-bar,
+body.ui-bars-hidden.favorites-page .bottom-player-bar{
+  opacity:0;
+  transform:translateX(-50%) translateY(calc(100% + 18px));
+  pointer-events:none;
+}
+@media (prefers-reduced-motion: reduce){
+  .toolbar, .bottom-player-bar{transition:none}
 }
 .bottom-player-bar .player{
   margin:0 auto;
