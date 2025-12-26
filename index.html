@@ -457,5 +457,58 @@
       window.addEventListener('appinstalled', () => { localStorage.setItem(INSTALLED_KEY, '1'); hidePrompt(); hideFooterLink(); });
     })();
   </script>
+  <!-- Copyright Confirmation Modal -->
+  <div id="copyrightModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <h3 class="modal-title">正版承诺</h3>
+      <p class="modal-text">本网站仅供新概念英语学习者辅助使用。使用本网站前，请确认您已购买正版新概念英语，拒绝任何形式的盗版书籍。</p>
+      
+      <div class="modal-checkbox-wrapper">
+        <input type="checkbox" id="copyrightCheck">
+        <label for="copyrightCheck">我已购买正版新概念英语书籍</label>
+      </div>
+      
+      <button id="copyrightConfirmBtn" class="modal-btn" disabled>进入学习</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const KEY = 'nce_copyright_confirmed';
+      const modal = document.getElementById('copyrightModal');
+      const checkbox = document.getElementById('copyrightCheck');
+      const btn = document.getElementById('copyrightConfirmBtn');
+      
+      if (!modal || !checkbox || !btn) return;
+      
+      // Check if already confirmed
+      const confirmed = localStorage.getItem(KEY);
+      if (!confirmed) {
+        modal.style.display = 'flex';
+        // Disable scroll
+        document.body.style.overflow = 'hidden';
+      }
+      
+      checkbox.addEventListener('change', (e) => {
+        btn.disabled = !e.target.checked;
+      });
+      
+      btn.addEventListener('click', () => {
+        if (checkbox.checked) {
+          localStorage.setItem(KEY, '1');
+          modal.style.opacity = '0';
+          setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+          }, 300);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
