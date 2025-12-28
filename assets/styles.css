@@ -292,6 +292,7 @@ body{
   background:var(--surface);
   box-shadow:var(--shadow);
   border-color:var(--border);
+  cursor: pointer;
 }
 .toolbar .back-inline svg{width:calc(14px * var(--lesson-ui-scale, 1));height:calc(14px * var(--lesson-ui-scale, 1))}
 .toolbar .back-inline:hover{
