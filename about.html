@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -15,20 +16,20 @@
 
   <!--  Microsoft Clarity 统计代码 -->
   <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
     })(window, document, "clarity", "script", "tvjv632zgs");
   </script>
   <!--  Microsoft Clarity 代码结束 -->
 
   <!-- 主题切换逻辑 -->
   <script>
-    (function() {
+    (function () {
       if (!window.matchMedia) return;
       const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const applyTheme = function(isDark) {
+      const applyTheme = function (isDark) {
         if (!document.body) return;
         document.body.classList.remove('dark-theme', 'light-theme');
         if (isDark) {
@@ -37,27 +38,28 @@
           document.body.classList.add('light-theme');
         }
       };
-      const handleChange = function(e) { applyTheme(e.matches); };
+      const handleChange = function (e) { applyTheme(e.matches); };
       if (colorSchemeQuery.addEventListener) {
         colorSchemeQuery.addEventListener('change', handleChange);
       } else if (colorSchemeQuery.addListener) {
         colorSchemeQuery.addListener(handleChange);
       }
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { applyTheme(colorSchemeQuery.matches); });
+        document.addEventListener('DOMContentLoaded', function () { applyTheme(colorSchemeQuery.matches); });
       } else {
         applyTheme(colorSchemeQuery.matches);
       }
     })();
   </script>
 </head>
+
 <body>
   <div class="about-container">
     <header class="about-header">
       <h1>关于</h1>
       <p class="subtitle">NCE Flow</p>
     </header>
-    
+
     <main>
       <!-- 项目与致谢 -->
       <div class="about-card">
@@ -65,7 +67,8 @@
           <div class="about-heading">项目与致谢</div>
           <div class="about-text">
             <p>
-              特别感谢 <strong>@iChochy - NCE 项目</strong> 整理并提供了完整的新概念英语学习资料，包括封面图片、MP3 音频文件和 LRC 字幕文件。这些宝贵的基础资源为本项目得以实现提供了核心支持。
+              特别感谢 <strong>@iChochy - NCE 项目</strong> 整理并提供了完整的新概念英语学习资料，包括封面图片、MP3 音频文件和 LRC
+              字幕文件。这些宝贵的基础资源为本项目得以实现提供了核心支持。
             </p>
             <p>
               NCE Flow 是一个纯粹的辅助学习工具，所有内容仅限个人学习、研究或欣赏之用。
@@ -285,12 +288,12 @@
         <a class="btn" href="/" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
       </div>
     </main>
-    
+
     <footer style="margin-top: 60px; text-align: center; color: var(--muted); opacity: 0.6; font-size: 0.8rem;">
-       <p class="version">NCE Flow · Designed for Learners</p>
+      <p class="version">NCE Flow · Designed for Learners</p>
     </footer>
   </div>
-  
+
   <script>
     // 注册 Service Worker
     if ('serviceWorker' in navigator) {
@@ -308,16 +311,25 @@
                 }
               });
             });
-            let refreshing = false;
+            // Show update notification instead of auto-refresh
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-              if (refreshing) return;
-              refreshing = true;
-              window.location.reload();
+              showUpdateNotification();
             });
           })
           .catch(err => console.log('[PWA] Service Worker 注册失败:', err));
       });
     }
+
+    function showUpdateNotification() {
+      if (document.getElementById('updateNotification')) return;
+      const notification = document.createElement('div');
+      notification.id = 'updateNotification';
+      notification.innerHTML = `<span>🎉 新版本已就绪</span><button onclick="window.location.reload()">点击刷新</button>`;
+      notification.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text,#1d1d1f);color:var(--bg,#fff);padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;font-size:14px;`;
+      notification.querySelector('button').style.cssText = `background:var(--accent,#3b82f6);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;`;
+      document.body.appendChild(notification);
+    }
   </script>
 </body>
+
 </html>
