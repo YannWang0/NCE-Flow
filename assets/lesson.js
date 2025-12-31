@@ -66,7 +66,7 @@
   // 主流程
   // --------------------------
   document.addEventListener('DOMContentLoaded', () => {
-    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (_) {}
+    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (_) { }
     window.scrollTo(0, 0);
 
     const hash = decodeURIComponent(location.hash.slice(1));
@@ -88,58 +88,58 @@
     const settingsPanel = qs('#settingsPanel');
     const settingsClose = qs('#settingsClose');
     const settingsDone = qs('#settingsDone');
-	    const prevLessonLink = qs('#prevLesson');
-	    const nextLessonLink = qs('#nextLesson');
-	    const speedButton = qs('#speed');
-	    const backToTopBtn = qs('#backToTop');
+    const prevLessonLink = qs('#prevLesson');
+    const nextLessonLink = qs('#nextLesson');
+    const speedButton = qs('#speed');
+    const backToTopBtn = qs('#backToTop');
 
-      // --------------------------
-      // 移动端浏览器：自动隐藏上下栏（非 PWA）
-      // --------------------------
-      (function initAutoHideBars(){
-        try {
-          const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator && window.navigator.standalone === true);
-          const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-          if (isStandalone || !isCoarse) return;
-          const body = document.body;
-          if (!body) return;
+    // --------------------------
+    // 移动端浏览器：自动隐藏上下栏（非 PWA）
+    // --------------------------
+    (function initAutoHideBars() {
+      try {
+        const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator && window.navigator.standalone === true);
+        const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        if (isStandalone || !isCoarse) return;
+        const body = document.body;
+        if (!body) return;
 
-          let hidden = false;
-          let lastY = window.scrollY || 0;
-          let idleTimer = 0;
-          const HIDE_CLASS = 'ui-bars-hidden';
+        let hidden = false;
+        let lastY = window.scrollY || 0;
+        let idleTimer = 0;
+        const HIDE_CLASS = 'ui-bars-hidden';
 
-          const show = () => {
-            if (hidden) { body.classList.remove(HIDE_CLASS); hidden = false; }
-            resetIdle();
-          };
-          const hide = () => {
-            const y = window.scrollY || 0;
-            if (y < 40) return;
-            if (!hidden) { body.classList.add(HIDE_CLASS); hidden = true; }
-          };
-          const resetIdle = () => {
-            if (idleTimer) clearTimeout(idleTimer);
-            idleTimer = setTimeout(() => hide(), 2200);
-          };
-          const onScroll = () => {
-            const y = window.scrollY || 0;
-            const dy = y - lastY;
-            if (Math.abs(dy) < 8) { resetIdle(); lastY = y; return; }
-            if (dy > 0) hide(); else show();
-            lastY = y;
-          };
-
-          window.addEventListener('scroll', onScroll, { passive: true });
-          ['touchstart','pointerdown'].forEach(t => document.addEventListener(t, show, { passive: true }));
-          document.addEventListener('focusin', show, { passive: true });
+        const show = () => {
+          if (hidden) { body.classList.remove(HIDE_CLASS); hidden = false; }
           resetIdle();
-        } catch (_) {}
-      })();
+        };
+        const hide = () => {
+          const y = window.scrollY || 0;
+          if (y < 40) return;
+          if (!hidden) { body.classList.add(HIDE_CLASS); hidden = true; }
+        };
+        const resetIdle = () => {
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => hide(), 2200);
+        };
+        const onScroll = () => {
+          const y = window.scrollY || 0;
+          const dy = y - lastY;
+          if (Math.abs(dy) < 8) { resetIdle(); lastY = y; return; }
+          if (dy > 0) hide(); else show();
+          lastY = y;
+        };
 
-	    // 本地存储键
-	    const RECENT_KEY = 'nce_recents';
-	    const LASTPOS_KEY = 'nce_lastpos';
+        window.addEventListener('scroll', onScroll, { passive: true });
+        ['touchstart', 'pointerdown'].forEach(t => document.addEventListener(t, show, { passive: true }));
+        document.addEventListener('focusin', show, { passive: true });
+        resetIdle();
+      } catch (_) { }
+    })();
+
+    // 本地存储键
+    const RECENT_KEY = 'nce_recents';
+    const LASTPOS_KEY = 'nce_lastpos';
     const SENTENCE_FAV_KEY = 'nce_sentence_favs_v1';
     const MODE_KEY = 'readMode';
     const FOLLOW_KEY = 'autoFollow';
@@ -158,7 +158,7 @@
       } catch (_) { return []; }
     }
     function saveSentenceFavs(arr) {
-      try { localStorage.setItem(SENTENCE_FAV_KEY, JSON.stringify(arr || [])); } catch (_) {}
+      try { localStorage.setItem(SENTENCE_FAV_KEY, JSON.stringify(arr || [])); } catch (_) { }
     }
     function sentenceFavId(i) { return `${book}/${base}::${i}`; }
 
@@ -178,11 +178,11 @@
     let loopReplayPending = false;  // 标记是否正在等待循环重播
     let playSeq = 0;               // 防止异步 seek 回调串线
 
-  // iOS 特有状态
-  let iosUnlocked = false;         // 是否已“解锁音频”
-  let iosUnlockPauseTimer = 0;     // 解锁用的延迟 pause（可取消）
-  let metadataReady = false;       // 是否已 loadedmetadata
-  let _userVolume = Math.max(0, Math.min(1, audio.volume || 1));
+    // iOS 特有状态
+    let iosUnlocked = false;         // 是否已“解锁音频”
+    let iosUnlockPauseTimer = 0;     // 解锁用的延迟 pause（可取消）
+    let metadataReady = false;       // 是否已 loadedmetadata
+    let _userVolume = Math.max(0, Math.min(1, audio.volume || 1));
 
     // 音频 seek 兼容：当服务器不支持 Range 时，回退为 Blob URL（可在本地 http.server 正常点读）
     let audioBlobUrl = '';
@@ -239,50 +239,54 @@
         afterPlay = 'none';
       }
 
-	      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
-	    }
+      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch (_) { }
+    }
 
-      // 自动续集时强制开启自动跟随（避免续播后定位生硬）
-      if (afterPlay === 'next' && !autoFollow) {
-        autoFollow = true;
-        try { localStorage.setItem(FOLLOW_KEY, 'true'); } catch(_) {}
-      }
+    // 自动续集时强制开启自动跟随（避免续播后定位生硬）
+    if (afterPlay === 'next' && !autoFollow) {
+      autoFollow = true;
+      try { localStorage.setItem(FOLLOW_KEY, 'true'); } catch (_) { }
+    }
 
-	    // --------------------------
-	    // Back to top button
-	    // --------------------------
-	    (function initBackToTop(){
-	      if (!backToTopBtn) return;
+    // --------------------------
+    // Back to top button
+    // --------------------------
+    (function initBackToTop() {
+      if (!backToTopBtn) return;
 
-	      const update = () => {
-	        const y = window.scrollY || document.documentElement.scrollTop || 0;
-	        const threshold = Math.min(320, window.innerHeight * 0.6);
-	        const show = y > threshold;
-	        backToTopBtn.classList.toggle('show', show);
-	        backToTopBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
-	        backToTopBtn.tabIndex = show ? 0 : -1;
-	      };
+      const update = () => {
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
+        const threshold = Math.min(320, window.innerHeight * 0.6);
+        const show = y > threshold;
+        backToTopBtn.classList.toggle('show', show);
+        backToTopBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
+        backToTopBtn.tabIndex = show ? 0 : -1;
+      };
 
-	      let ticking = false;
-	      const onScroll = () => {
-	        if (ticking) return;
-	        ticking = true;
-	        raf(() => { ticking = false; update(); });
-	      };
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        raf(() => { ticking = false; update(); });
+      };
 
-	      backToTopBtn.addEventListener('click', () => {
-	        try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-	        catch(_) { window.scrollTo(0, 0); }
-	      });
+      backToTopBtn.addEventListener('click', () => {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        catch (_) { window.scrollTo(0, 0); }
+        // 重置播放位置，使空格键从第一句开始
+        idx = -1;
+        // 移除所有句子的高亮状态
+        listEl.querySelectorAll('.sentence.active').forEach(el => el.classList.remove('active'));
+      });
 
-	      window.addEventListener('scroll', onScroll, { passive: true });
-	      window.addEventListener('resize', onScroll, { passive: true });
-	      update();
-	    })();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      update();
+    })();
 
-	    // --------------------------
-	    // iOS 解锁：首次任意交互即解锁
-	    // --------------------------
+    // --------------------------
+    // iOS 解锁：首次任意交互即解锁
+    // --------------------------
     function unlockAudioSync() {
       if (iosUnlocked) return;
       try {
@@ -293,7 +297,7 @@
         if (iosUnlockPauseTimer) clearTimeout(iosUnlockPauseTimer);
         iosUnlockPauseTimer = setTimeout(() => {
           iosUnlockPauseTimer = 0;
-          try { audio.pause(); } catch(_) {}
+          try { audio.pause(); } catch (_) { }
           audio.muted = false;
         }, 0);
       } catch (_) { iosUnlocked = false; }
@@ -302,10 +306,10 @@
       if (!iosUnlockPauseTimer) return;
       clearTimeout(iosUnlockPauseTimer);
       iosUnlockPauseTimer = 0;
-      try { audio.muted = false; } catch (_) {}
+      try { audio.muted = false; } catch (_) { }
     }
     if (isIOSLike) {
-      const evs = ['pointerdown','touchstart','click'];
+      const evs = ['pointerdown', 'touchstart', 'click'];
       const onceUnlock = (e) => { unlockAudioSync(); evs.forEach(t => document.removeEventListener(t, onceUnlock, true)); };
       evs.forEach(t => document.addEventListener(t, onceUnlock, { capture: true, passive: true, once: true }));
     }
@@ -574,7 +578,7 @@
     function setReadMode(mode) {
       if (!['continuous', 'single', 'listen', 'shadow'].includes(mode)) mode = 'continuous';
       readMode = mode;
-      try { localStorage.setItem(MODE_KEY, readMode); } catch(_) {}
+      try { localStorage.setItem(MODE_KEY, readMode); } catch (_) { }
       reflectReadMode();
       clearShadowGapTimer();
       shadowAutoPause = false;
@@ -586,13 +590,13 @@
     }
     function setFollowMode(follow) {
       autoFollow = !!follow;
-      try { localStorage.setItem(FOLLOW_KEY, autoFollow.toString()); } catch(_) {}
+      try { localStorage.setItem(FOLLOW_KEY, autoFollow.toString()); } catch (_) { }
       reflectFollowMode();
     }
     function setAfterPlay(mode) {
       if (!['none', 'single', 'all', 'next'].includes(mode)) mode = 'none';
       afterPlay = mode;
-      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch(_) {}
+      try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch (_) { }
       reflectAfterPlay();
 
       // 自动续集：默认开启自动跟随（用户可再手动关闭，但本次选择会帮你打开）
@@ -602,7 +606,7 @@
     }
     function setSkipIntro(skip) {
       skipIntro = !!skip;
-      try { localStorage.setItem(SKIP_INTRO_KEY, skipIntro.toString()); } catch(_) {}
+      try { localStorage.setItem(SKIP_INTRO_KEY, skipIntro.toString()); } catch (_) { }
       reflectSkipIntro();
       // 重新计算第一句正文的位置
       if (items && items.length > 0) {
@@ -613,13 +617,13 @@
     function setShadowRepeatCount(value) {
       shadowRepeatTotal = normalizeShadowRepeat(value);
       shadowRepeatRemaining = shadowRepeatTotal;
-      try { localStorage.setItem(SHADOW_REPEAT_KEY, String(shadowRepeatTotal)); } catch(_) {}
+      try { localStorage.setItem(SHADOW_REPEAT_KEY, String(shadowRepeatTotal)); } catch (_) { }
       reflectShadowSettings();
     }
     function setShadowGapMode(mode) {
       if (!Object.prototype.hasOwnProperty.call(SHADOW_GAP_RATIOS, mode)) mode = 'medium';
       shadowGapMode = mode;
-      try { localStorage.setItem(SHADOW_GAP_KEY, shadowGapMode); } catch(_) {}
+      try { localStorage.setItem(SHADOW_GAP_KEY, shadowGapMode); } catch (_) { }
       reflectShadowSettings();
     }
     function updateListenModeUI() {
@@ -655,7 +659,7 @@
         const allRevealed = JSON.parse(localStorage.getItem(REVEALED_SENTENCES_KEY) || '{}');
         allRevealed[id] = Array.from(revealedSentences);
         localStorage.setItem(REVEALED_SENTENCES_KEY, JSON.stringify(allRevealed));
-      } catch(_) {}
+      } catch (_) { }
     }
     function loadRevealedSentences() {
       try {
@@ -663,7 +667,7 @@
         const allRevealed = JSON.parse(localStorage.getItem(REVEALED_SENTENCES_KEY) || '{}');
         const revealed = allRevealed[id] || [];
         revealedSentences = new Set(revealed);
-      } catch(_) {
+      } catch (_) {
         revealedSentences = new Set();
       }
     }
@@ -779,18 +783,18 @@
     });
     audio.addEventListener('ratechange', () => {
       const r = audio.playbackRate;
-      try { localStorage.setItem('audioPlaybackRate', r); } catch(_) {}
+      try { localStorage.setItem('audioPlaybackRate', r); } catch (_) { }
       if (speedButton) speedButton.textContent = `${r.toFixed(2)}x`;
       const i = rates.indexOf(r); if (i !== -1) currentRateIndex = i;
       scheduleAdvance();
     });
 
     function pauseForNavigation() {
-      try { saveLastPos(); } catch (_) {}
+      try { saveLastPos(); } catch (_) { }
       clearShadowGapTimer();
       shadowAutoPause = false;
       if (!audio.paused) {
-        try { internalPause = true; audio.pause(); } catch (_) {}
+        try { internalPause = true; audio.pause(); } catch (_) { }
       }
     }
 
@@ -855,7 +859,7 @@
               }
             }
             const p = audio.play();
-            if (p && p.catch) p.catch(() => {});
+            if (p && p.catch) p.catch(() => { });
             return;
           }
           // 和空格键一样的逻辑：点读模式智能跳转
@@ -876,7 +880,7 @@
             playSegment(firstContentIndex, { manual: true });
           } else {
             const p = audio.play();
-            if (p && p.catch) p.catch(() => {});
+            if (p && p.catch) p.catch(() => { });
           }
         } else {
           audio.pause();
@@ -926,14 +930,14 @@
 
     // 设置面板（沿用你的结构）
     let _prevFocus = null; let _trapHandler = null;
-    function getFocusable(root){
+    function getFocusable(root) {
       return root ? Array.from(root.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
-        .filter(el=>!el.hasAttribute('disabled') && el.offsetParent !== null) : [];
+        .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null) : [];
     }
-    function enableTrap(){
+    function enableTrap() {
       if (!settingsPanel) return;
       const fs = getFocusable(settingsPanel); if (fs.length) fs[0].focus();
-      _trapHandler = (e)=>{
+      _trapHandler = (e) => {
         if (e.key !== 'Tab') return;
         const list = getFocusable(settingsPanel); if (!list.length) return;
         const first = list[0], last = list[list.length - 1];
@@ -942,25 +946,25 @@
       };
       document.addEventListener('keydown', _trapHandler);
     }
-    function disableTrap(){ if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; } }
-    function openSettings(){
-      if (settingsOverlay) { settingsOverlay.hidden = false; requestAnimationFrame(()=>settingsOverlay.classList.add('show')); }
-      if (settingsPanel)   { settingsPanel.hidden = false;   requestAnimationFrame(()=>settingsPanel.classList.add('show')); }
-      try { _prevFocus = document.activeElement; } catch(_) {}
-      try { document.body.style.overflow = 'hidden'; } catch(_) {}
+    function disableTrap() { if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; } }
+    function openSettings() {
+      if (settingsOverlay) { settingsOverlay.hidden = false; requestAnimationFrame(() => settingsOverlay.classList.add('show')); }
+      if (settingsPanel) { settingsPanel.hidden = false; requestAnimationFrame(() => settingsPanel.classList.add('show')); }
+      try { _prevFocus = document.activeElement; } catch (_) { }
+      try { document.body.style.overflow = 'hidden'; } catch (_) { }
       enableTrap();
     }
-    function closeSettings(){
+    function closeSettings() {
       disableTrap();
-      if (settingsOverlay) { settingsOverlay.classList.remove('show'); setTimeout(()=>settingsOverlay.hidden = true, 200); }
-      if (settingsPanel)   { settingsPanel.classList.remove('show');   setTimeout(()=>settingsPanel.hidden = true, 200); }
-      try { document.body.style.overflow = ''; } catch(_) {}
-      try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch(_) {}
+      if (settingsOverlay) { settingsOverlay.classList.remove('show'); setTimeout(() => settingsOverlay.hidden = true, 200); }
+      if (settingsPanel) { settingsPanel.classList.remove('show'); setTimeout(() => settingsPanel.hidden = true, 200); }
+      try { document.body.style.overflow = ''; } catch (_) { }
+      try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch (_) { }
     }
-    if (settingsBtn)     settingsBtn.addEventListener('click', openSettings);
+    if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
     if (settingsOverlay) settingsOverlay.addEventListener('click', closeSettings);
-    if (settingsClose)   settingsClose.addEventListener('click', closeSettings);
-    if (settingsDone)    settingsDone.addEventListener('click', closeSettings);
+    if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+    if (settingsDone) settingsDone.addEventListener('click', closeSettings);
 
     // 快捷键帮助面板
     const shortcutsBtn = qs('#shortcutsToggle');
@@ -969,29 +973,29 @@
     const shortcutsClose = qs('#shortcutsClose');
     const shortcutsDone = qs('#shortcutsDone');
 
-    function openShortcuts(){
+    function openShortcuts() {
       // 先立即关闭设置面板,避免两个面板叠加显示
       if (settingsPanel && !settingsPanel.hidden) {
         disableTrap();
         if (settingsOverlay) { settingsOverlay.classList.remove('show'); settingsOverlay.hidden = true; }
         if (settingsPanel) { settingsPanel.classList.remove('show'); settingsPanel.hidden = true; }
-        try { document.body.style.overflow = ''; } catch(_) {}
+        try { document.body.style.overflow = ''; } catch (_) { }
       }
-      if (shortcutsOverlay) { shortcutsOverlay.hidden = false; requestAnimationFrame(()=>shortcutsOverlay.classList.add('show')); }
-      if (shortcutsPanel)   { shortcutsPanel.hidden = false;   requestAnimationFrame(()=>shortcutsPanel.classList.add('show')); }
-      try { _prevFocus = document.activeElement; } catch(_) {}
-      try { document.body.style.overflow = 'hidden'; } catch(_) {}
+      if (shortcutsOverlay) { shortcutsOverlay.hidden = false; requestAnimationFrame(() => shortcutsOverlay.classList.add('show')); }
+      if (shortcutsPanel) { shortcutsPanel.hidden = false; requestAnimationFrame(() => shortcutsPanel.classList.add('show')); }
+      try { _prevFocus = document.activeElement; } catch (_) { }
+      try { document.body.style.overflow = 'hidden'; } catch (_) { }
     }
-    function closeShortcuts(){
-      if (shortcutsOverlay) { shortcutsOverlay.classList.remove('show'); setTimeout(()=>shortcutsOverlay.hidden = true, 200); }
-      if (shortcutsPanel)   { shortcutsPanel.classList.remove('show');   setTimeout(()=>shortcutsPanel.hidden = true, 200); }
-      try { document.body.style.overflow = ''; } catch(_) {}
-      try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch(_) {}
+    function closeShortcuts() {
+      if (shortcutsOverlay) { shortcutsOverlay.classList.remove('show'); setTimeout(() => shortcutsOverlay.hidden = true, 200); }
+      if (shortcutsPanel) { shortcutsPanel.classList.remove('show'); setTimeout(() => shortcutsPanel.hidden = true, 200); }
+      try { document.body.style.overflow = ''; } catch (_) { }
+      try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch (_) { }
     }
-    if (shortcutsBtn)     shortcutsBtn.addEventListener('click', openShortcuts);
+    if (shortcutsBtn) shortcutsBtn.addEventListener('click', openShortcuts);
     if (shortcutsOverlay) shortcutsOverlay.addEventListener('click', closeShortcuts);
-    if (shortcutsClose)   shortcutsClose.addEventListener('click', closeShortcuts);
-    if (shortcutsDone)    shortcutsDone.addEventListener('click', closeShortcuts);
+    if (shortcutsClose) shortcutsClose.addEventListener('click', closeShortcuts);
+    if (shortcutsDone) shortcutsDone.addEventListener('click', closeShortcuts);
 
     // 快捷键面板"返回设置"按钮
     const shortcutsBack = qs('#shortcutsBack');
@@ -1002,7 +1006,7 @@
         // 立即关闭快捷键面板
         if (shortcutsOverlay) { shortcutsOverlay.classList.remove('show'); shortcutsOverlay.hidden = true; }
         if (shortcutsPanel) { shortcutsPanel.classList.remove('show'); shortcutsPanel.hidden = true; }
-        try { document.body.style.overflow = ''; } catch(_) {}
+        try { document.body.style.overflow = ''; } catch (_) { }
         // 立即打开设置面板
         openSettings();
       });
@@ -1086,7 +1090,7 @@
         e.preventDefault();
         const newVolume = Math.min(1, audio.volume + 0.1);
         audio.volume = newVolume;
-        try { localStorage.setItem('nce_volume', newVolume); } catch(_) {}
+        try { localStorage.setItem('nce_volume', newVolume); } catch (_) { }
         showVolumeToast(newVolume);
         return;
       }
@@ -1096,7 +1100,7 @@
         e.preventDefault();
         const newVolume = Math.max(0, audio.volume - 0.1);
         audio.volume = newVolume;
-        try { localStorage.setItem('nce_volume', newVolume); } catch(_) {}
+        try { localStorage.setItem('nce_volume', newVolume); } catch (_) { }
         showVolumeToast(newVolume);
         return;
       }
@@ -1119,7 +1123,7 @@
               }
             }
             const p = audio.play();
-            if (p && p.catch) p.catch(() => {});
+            if (p && p.catch) p.catch(() => { });
             return;
           }
           // 点读模式下的智能跳转：如果当前在句末（说明是自动暂停的），跳到下一句
@@ -1147,7 +1151,7 @@
             playSegment(startIdx, { manual: true });
           } else {
             const p = audio.play();
-            if (p && p.catch) p.catch(() => {});
+            if (p && p.catch) p.catch(() => { });
           }
         } else {
           audio.pause();
@@ -1201,9 +1205,9 @@
     });
 
     const settingsReset = qs('#settingsReset');
-    if (settingsReset){
-      settingsReset.addEventListener('click', ()=>{
-        try{ localStorage.setItem('audioPlaybackRate', DEFAULT_RATE); }catch(_){}
+    if (settingsReset) {
+      settingsReset.addEventListener('click', () => {
+        try { localStorage.setItem('audioPlaybackRate', DEFAULT_RATE); } catch (_) { }
         audio.playbackRate = DEFAULT_RATE;
         setReadMode('continuous'); setFollowMode(true); setAfterPlay('none'); setSkipIntro(false);
         setShadowRepeatCount(2); setShadowGapMode('medium');
@@ -1308,7 +1312,7 @@
     // --------------------------
     function clearAdvance() {
       if (segmentTimer) { clearTimeout(segmentTimer); segmentTimer = 0; }
-      if (segmentRaf)   { cancelAnimationFrame(segmentRaf); segmentRaf = 0; }
+      if (segmentRaf) { cancelAnimationFrame(segmentRaf); segmentRaf = 0; }
     }
     function clearShadowGapTimer() {
       if (shadowGapTimer) { clearTimeout(shadowGapTimer); shadowGapTimer = 0; }
@@ -1321,7 +1325,7 @@
       return base + (r - 1) * slope;
     }
     const NEAR_WINDOW_MS = isIOSLike ? 160 : 120;
-    const MAX_CHUNK_MS   = 10000;
+    const MAX_CHUNK_MS = 10000;
 
     function countWords(text) {
       if (!text) return 0;
@@ -1469,7 +1473,7 @@
     // --------------------------
     function fastSeekTo(t) {
       if (typeof audio.fastSeek === 'function') {
-        try { audio.fastSeek(t); } catch(_) { audio.currentTime = t; }
+        try { audio.fastSeek(t); } catch (_) { audio.currentTime = t; }
       } else {
         audio.currentTime = t;
       }
@@ -1507,12 +1511,12 @@
 
         metadataReady = false;
         audio.src = url;
-        try { audio.load(); } catch(_) {}
+        try { audio.load(); } catch (_) { }
         await ensureMetadata();
 
-        try { audio.playbackRate = keepRate; } catch(_) {}
-        try { audio.volume = keepVol; } catch(_) {}
-        try { audio.muted = keepMuted; } catch(_) {}
+        try { audio.playbackRate = keepRate; } catch (_) { }
+        try { audio.volume = keepVol; } catch (_) { }
+        try { audio.muted = keepMuted; } catch (_) { }
 
         usingBlobSrc = true;
         return true;
@@ -1593,7 +1597,7 @@
         fastSeekTo(start);
       } else {
         // 点读或听读（单句循环）/初次播放：暂停→seek→seeked 后 play（不使用固定延时）
-        try { internalPause = true; audio.pause(); } catch(_) {}
+        try { internalPause = true; audio.pause(); } catch (_) { }
         const target = start;
         let retries = 0;
         let blobTried = false;
@@ -1622,7 +1626,7 @@
               }
             }
 
-            const p = audio.play(); if (p && p.catch) p.catch(()=>{});
+            const p = audio.play(); if (p && p.catch) p.catch(() => { });
             raf2(() => scheduleAdvance());
           };
           audio.addEventListener('seeked', onDone, { once: true });
@@ -1675,22 +1679,22 @@
       };
       followAnimRaf = requestAnimationFrame(step);
     }
-    function scheduleScrollTo(el, manual){
+    function scheduleScrollTo(el, manual) {
       if (!el) return;
       if (scrollTimer) { clearTimeout(scrollTimer); scrollTimer = 0; }
       if (!autoFollow) return;
       cancelFollowAnim();
-      if (manual) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_) {} return; }
-      if (prefersReducedMotion()) { try { el.scrollIntoView({ behavior: 'auto', block: 'center' }); } catch(_) {} return; }
+      if (manual) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) { } return; }
+      if (prefersReducedMotion()) { try { el.scrollIntoView({ behavior: 'auto', block: 'center' }); } catch (_) { } return; }
       scrollTimer = setTimeout(() => {
         try {
           const y = targetScrollYFor(el);
           // scrollTo({behavior:'smooth'}) 在部分浏览器/场景会被降级，手写动画更一致
           smoothScrollToY(y, { durationMs: 280 });
-        } catch(_) {}
+        } catch (_) { }
       }, 240);
     }
-    function highlight(i, manual=false) {
+    function highlight(i, manual = false) {
       const prev = listEl.querySelector('.sentence.active'); if (prev) prev.classList.remove('active');
       const cur = listEl.querySelector(`.sentence[data-idx="${i}"]`);
       if (cur) { cur.classList.add('active'); scheduleScrollTo(cur, manual); }
@@ -1702,24 +1706,24 @@
     let resumePlayPrompt = null;
     function hideResumePlayPrompt() {
       if (!resumePlayPrompt) return;
-      try { resumePlayPrompt.remove(); } catch (_) {}
+      try { resumePlayPrompt.remove(); } catch (_) { }
       resumePlayPrompt = null;
     }
     function showResumePlayPrompt() {
       if (resumePlayPrompt) return;
       const wrap = document.createElement('div');
       wrap.className = 'resume-play-overlay';
-      
+
       const card = document.createElement('div');
       card.className = 'resume-play-card';
-      
+
       const icon = document.createElement('div');
       icon.innerHTML = '<svg class="resume-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-      
+
       const text = document.createElement('div');
       text.className = 'resume-play-text';
       text.textContent = '点一下继续播放';
-      
+
       const sub = document.createElement('div');
       sub.className = 'resume-play-subtext';
       sub.textContent = '浏览器自动播放已暂停';
@@ -1728,7 +1732,7 @@
       card.appendChild(text);
       card.appendChild(sub);
       wrap.appendChild(card);
-      
+
       document.body.appendChild(wrap);
       resumePlayPrompt = wrap;
 
@@ -1759,13 +1763,13 @@
           if (p && p.catch) {
             p.catch(() => {
               audio.removeEventListener('playing', onPlaying);
-              try { audio.muted = false; } catch (_) {}
+              try { audio.muted = false; } catch (_) { }
               // 仍被拦截则保留提示
             });
           }
         } catch (_) {
           audio.removeEventListener('playing', onPlaying);
-          try { audio.muted = false; } catch (_) {}
+          try { audio.muted = false; } catch (_) { }
         }
 
         (async () => {
@@ -1779,8 +1783,8 @@
             const finish = () => {
               if (done) return;
               done = true;
-              try { audio.removeEventListener('seeked', finish); } catch (_) {}
-              try { audio.removeEventListener('canplay', finish); } catch (_) {}
+              try { audio.removeEventListener('seeked', finish); } catch (_) { }
+              try { audio.removeEventListener('canplay', finish); } catch (_) { }
               raf2(() => { audio.muted = false; scheduleAdvance(); });
             };
             audio.addEventListener('seeked', finish, { once: true });
@@ -1788,8 +1792,8 @@
             fastSeekTo(desired);
             setTimeout(finish, 900);
           } catch (_) {
-            try { audio.muted = false; } catch (_) {}
-            try { scheduleAdvance(); } catch (_) {}
+            try { audio.muted = false; } catch (_) { }
+            try { scheduleAdvance(); } catch (_) { }
           }
         })();
       };
@@ -1819,7 +1823,7 @@
       // 兜底：部分 iOS 会静默失败（无 reject 但保持 paused）
       setTimeout(() => {
         if (!scheduled && audio.paused) {
-          try { audio.removeEventListener('playing', onPlaying); } catch (_) {}
+          try { audio.removeEventListener('playing', onPlaying); } catch (_) { }
           showResumePlayPrompt();
         }
       }, 600);
@@ -1977,7 +1981,7 @@
         z-index: 1000; backdrop-filter: saturate(120%) blur(10px); animation: slideDown 0.3s ease-out;
       `;
       n.textContent = message; document.body.appendChild(n);
-      setTimeout(()=>{ n.style.animation='slideUp 0.3s ease-out'; setTimeout(()=>{ document.body.removeChild(n); },300); },2000);
+      setTimeout(() => { n.style.animation = 'slideUp 0.3s ease-out'; setTimeout(() => { document.body.removeChild(n); }, 300); }, 2000);
     }
     async function autoNextLesson() {
       const nextLesson = await getNextLesson(book, base);
@@ -1991,7 +1995,7 @@
             const map = JSON.parse(localStorage.getItem(LASTPOS_KEY) || '{}');
             map[nextId] = { t: 0, idx: 0, ts: Date.now() };
             localStorage.setItem(LASTPOS_KEY, JSON.stringify(map));
-          } catch(_) {}
+          } catch (_) { }
           window.location.href = `lesson.html#${book}/${nextLesson.filename}`;
         }, 2000);
       } else {
@@ -2030,15 +2034,15 @@
       if (!isNaN(savedVolume) && savedVolume >= 0 && savedVolume <= 1) {
         audio.volume = savedVolume;
       }
-    } catch(_) {}
+    } catch (_) { }
 
     // 重要：iOS 上尽早设定 preload，有助于更快拿到 metadata
-    try { audio.preload = 'auto'; } catch(_) {}
+    try { audio.preload = 'auto'; } catch (_) { }
     audio.src = mp3;
-    try { audio.load(); } catch(_) {}
+    try { audio.load(); } catch (_) { }
 
     if (window.NCE_APP && typeof NCE_APP.initSegmented === 'function') {
-      try { NCE_APP.initSegmented(document); } catch(_) {}
+      try { NCE_APP.initSegmented(document); } catch (_) { }
     }
 
     resolveLessonNeighbors();
@@ -2065,23 +2069,23 @@
       }
     });
 
-    function lessonId(){ return `${book}/${base}`; }
-    function touchRecent(){
-      try{
+    function lessonId() { return `${book}/${base}`; }
+    function touchRecent() {
+      try {
         const id = lessonId(); const now = Date.now();
-        const raw = JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');
-        const rest = raw.filter(x=>x && x.id !== id);
+        const raw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+        const rest = raw.filter(x => x && x.id !== id);
         const next = [{ id, ts: now }, ...rest].slice(0, 60);
         localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-      }catch(_){}
+      } catch (_) { }
     }
-    function saveLastPos(){
-      try{
+    function saveLastPos() {
+      try {
         const id = lessonId(); const now = Date.now();
-        const map = JSON.parse(localStorage.getItem(LASTPOS_KEY)||'{}');
-        map[id] = { t: Math.max(0, audio.currentTime||0), idx: Math.max(0, idx|0), ts: now };
+        const map = JSON.parse(localStorage.getItem(LASTPOS_KEY) || '{}');
+        map[id] = { t: Math.max(0, audio.currentTime || 0), idx: Math.max(0, idx | 0), ts: now };
         localStorage.setItem(LASTPOS_KEY, JSON.stringify(map));
-      }catch(_){}
+      } catch (_) { }
     }
 
     loadLrc(lrc).then(({ meta, items: arr }) => {
@@ -2106,13 +2110,13 @@
       updateListenModeUI();
 
       // 从上一课或首页跳转来的自动恢复
-      try{
+      try {
         const resumeId = sessionStorage.getItem('nce_resume');
-        if (resumeId && resumeId === lessonId()){
-          const map = JSON.parse(localStorage.getItem(LASTPOS_KEY)||'{}');
+        if (resumeId && resumeId === lessonId()) {
+          const map = JSON.parse(localStorage.getItem(LASTPOS_KEY) || '{}');
           const pos = map[resumeId];
-          if (pos){
-            let targetIdx = (Number.isInteger(pos.idx) && pos.idx>=0 && pos.idx<items.length) ? pos.idx : 0;
+          if (pos) {
+            let targetIdx = (Number.isInteger(pos.idx) && pos.idx >= 0 && pos.idx < items.length) ? pos.idx : 0;
 
             // 如果启用了跳过开头，且保存的位置在跳过区域内，则从第一句正文开始
             let targetTime = Math.max(0, pos.t || 0);
@@ -2130,12 +2134,12 @@
             idx = targetIdx; segmentEnd = endFor(items[targetIdx]);
             if (readMode === 'shadow') shadowRepeatRemaining = shadowRepeatTotal;
             highlight(targetIdx, false);
-            if (sessionStorage.getItem('nce_resume_play')==='1'){
+            if (sessionStorage.getItem('nce_resume_play') === '1') {
               attemptAutoplayAndSchedule();
             }
           }
         }
-      }catch(_){}
+      } catch (_) { }
       sessionStorage.removeItem('nce_resume');
       sessionStorage.removeItem('nce_resume_play');
     }).catch(err => {
@@ -2144,7 +2148,7 @@
     });
 
     window.addEventListener('pagehide', () => { pauseForNavigation(); });
-    window.addEventListener('beforeunload', ()=>{ saveLastPos(); try { if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl); } catch(_) {} });
+    window.addEventListener('beforeunload', () => { saveLastPos(); try { if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl); } catch (_) { } });
     window.addEventListener('hashchange', () => { window.scrollTo(0, 0); location.reload(); });
   });
 })();
@@ -2152,62 +2156,62 @@
 // --------------------------
 // Particle Background Animation
 // --------------------------
-(function(){
+(function () {
   const cvs = document.getElementById('bg-canvas');
   if (!cvs) return;
 
   const ctx = cvs.getContext('2d'),
-        dpr = window.devicePixelRatio || 1;
+    dpr = window.devicePixelRatio || 1;
   let w, h, particles = [];
 
-  function resize(){
-    w = cvs.width  = innerWidth  * dpr;
+  function resize() {
+    w = cvs.width = innerWidth * dpr;
     h = cvs.height = innerHeight * dpr;
     ctx.scale(dpr, dpr);
-    cvs.style.width  = innerWidth  + 'px';
+    cvs.style.width = innerWidth + 'px';
     cvs.style.height = innerHeight + 'px';
   }
   window.addEventListener('resize', resize);
 
   class Particle {
-    constructor(){
+    constructor() {
       this.x = Math.random() * innerWidth;
       this.y = Math.random() * innerHeight;
       this.vx = (Math.random() - .5) * .3;
       this.vy = (Math.random() - .5) * .3;
       this.r = Math.random() * 1.2 + .5;
     }
-    update(){
+    update() {
       this.x += this.vx;
       this.y += this.vy;
-      if(this.x < 0 || this.x > innerWidth) this.vx *= -1;
-      if(this.y < 0 || this.y > innerHeight) this.vy *= -1;
+      if (this.x < 0 || this.x > innerWidth) this.vx *= -1;
+      if (this.y < 0 || this.y > innerHeight) this.vy *= -1;
     }
-    draw(){
+    draw() {
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
       ctx.fillStyle = isDark() ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
       ctx.fill();
     }
   }
 
-  function isDark(){
+  function isDark() {
     return document.body.classList.contains('dark-theme');
   }
 
-  function drawLines(){
-    for(let i=0;i<particles.length;i++){
-      for(let j=i+1;j<particles.length;j++){
+  function drawLines() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
         const dx = particles[i].x - particles[j].x,
-              dy = particles[i].y - particles[j].y,
-              dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < 100){
+          dy = particles[i].y - particles[j].y,
+          dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
           ctx.strokeStyle = isDark()
-            ? `rgba(255,255,255,${1-dist/100})`
-            : `rgba(0,0,0,${.5-dist/200})`;
+            ? `rgba(255,255,255,${1 - dist / 100})`
+            : `rgba(0,0,0,${.5 - dist / 200})`;
           ctx.lineWidth = .5;
           ctx.stroke();
         }
@@ -2215,15 +2219,15 @@
     }
   }
 
-  function init(){
+  function init() {
     resize();
-    particles = Array.from({length: Math.floor(innerWidth*innerHeight/18000)}, ()=>new Particle());
+    particles = Array.from({ length: Math.floor(innerWidth * innerHeight / 18000) }, () => new Particle());
     animate();
   }
 
-  function animate(){
-    ctx.clearRect(0,0,innerWidth,innerHeight);
-    particles.forEach(p=>{p.update();p.draw();});
+  function animate() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    particles.forEach(p => { p.update(); p.draw(); });
     drawLines();
     requestAnimationFrame(animate);
   }
