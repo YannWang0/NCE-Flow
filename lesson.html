@@ -471,9 +471,8 @@
       if (document.getElementById('updateNotification')) return;
       const notification = document.createElement('div');
       notification.id = 'updateNotification';
-      notification.innerHTML = `<span>🎉 新版本已就绪</span><button onclick="window.location.reload()">点击刷新</button>`;
-      notification.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text,#1d1d1f);color:var(--bg,#fff);padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;font-size:14px;`;
-      notification.querySelector('button').style.cssText = `background:var(--accent,#3b82f6);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;`;
+      notification.className = 'update-toast';
+      notification.innerHTML = `<span class="update-toast-text">🎉 新版本已就绪</span><button class="update-toast-btn" onclick="window.location.reload()">刷新</button>`;
       document.body.appendChild(notification);
     }
   </script>
