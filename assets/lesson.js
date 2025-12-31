@@ -69,8 +69,23 @@
     try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (_) { }
     window.scrollTo(0, 0);
 
-    const hash = decodeURIComponent(location.hash.slice(1));
+    let hash = decodeURIComponent(location.hash.slice(1));
     if (!hash) { location.href = 'book.html'; return; }
+
+    // 支持 hash 中的 query 参数 (e.g., #NCE1/1?line=10)
+    let queryParams = {};
+    if (hash.includes('?')) {
+      const parts = hash.split('?');
+      hash = parts[0]; // 重置 hash 为纯路径
+      const search = parts[1];
+      if (search) {
+        search.split('&').forEach(pair => {
+          const [k, v] = pair.split('=');
+          if (k) queryParams[decodeURIComponent(k)] = decodeURIComponent(v || '');
+        });
+      }
+    }
+
     const [book, ...rest] = hash.split('/');
     const base = rest.join('/');
     const inModern = /\/modern\//.test(location.pathname);
@@ -2109,10 +2124,28 @@
       loadRevealedSentences();
       updateListenModeUI();
 
-      // 从上一课或首页跳转来的自动恢复
+      // 优先处理 Deep Link (搜索跳转)
+      const deepLinkLine = parseInt(queryParams.line, 10);
+      let deepLinkHandled = false;
+      if (!isNaN(deepLinkLine) && deepLinkLine >= 0 && deepLinkLine < items.length) {
+        console.log('[DeepLink] Jumping to line:', deepLinkLine);
+        idx = deepLinkLine;
+        segmentEnd = endFor(items[idx]);
+        deepLinkHandled = true;
+        setTimeout(() => {
+          highlight(idx, false);
+          if (isIOSLike) {
+            showNotification('点击任意处开始播放');
+          } else {
+            playSegment(idx, { manual: true });
+          }
+        }, 150);
+      }
+
+      // 从上一课或首页跳转来的自动恢复 (如果 Deep Link 未触发)
       try {
         const resumeId = sessionStorage.getItem('nce_resume');
-        if (resumeId && resumeId === lessonId()) {
+        if (!deepLinkHandled && resumeId && resumeId === lessonId()) {
           const map = JSON.parse(localStorage.getItem(LASTPOS_KEY) || '{}');
           const pos = map[resumeId];
           if (pos) {
