@@ -2338,14 +2338,19 @@
   const cvs = document.getElementById('bg-canvas');
   if (!cvs) return;
 
-  const ctx = cvs.getContext('2d'),
-    dpr = window.devicePixelRatio || 1;
-  let w, h, particles = [];
+  const ctx = cvs.getContext('2d');
+  const DPR_CAP = 1.5;
+  const TARGET_FPS = 30;
+  const FRAME_MS = 1000 / TARGET_FPS;
+  const BASE_FRAME_MS = 1000 / 60;
+  let particles = [];
+  let lastRenderTs = 0;
 
   function resize() {
-    w = cvs.width = innerWidth * dpr;
-    h = cvs.height = innerHeight * dpr;
-    ctx.scale(dpr, dpr);
+    const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
+    cvs.width = Math.floor(innerWidth * dpr);
+    cvs.height = Math.floor(innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cvs.style.width = innerWidth + 'px';
     cvs.style.height = innerHeight + 'px';
   }
@@ -2359,9 +2364,9 @@
       this.vy = (Math.random() - .5) * .3;
       this.r = Math.random() * 1.2 + .5;
     }
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
+    update(step) {
+      this.x += this.vx * step;
+      this.y += this.vy * step;
       if (this.x < 0 || this.x > innerWidth) this.vx *= -1;
       if (this.y < 0 || this.y > innerHeight) this.vy *= -1;
     }
@@ -2378,18 +2383,21 @@
   }
 
   function drawLines() {
+    const maxDist = 100;
+    const maxDistSq = maxDist * maxDist;
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const dx = particles[i].x - particles[j].x,
-          dy = particles[i].y - particles[j].y,
-          dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 100) {
+          dy = particles[i].y - particles[j].y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < maxDistSq) {
+          const dist = Math.sqrt(distSq);
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
           ctx.strokeStyle = isDark()
-            ? `rgba(255,255,255,${1 - dist / 100})`
-            : `rgba(0,0,0,${.5 - dist / 200})`;
+            ? `rgba(255,255,255,${1 - dist / maxDist})`
+            : `rgba(0,0,0,${.5 - dist / (maxDist * 2)})`;
           ctx.lineWidth = .5;
           ctx.stroke();
         }
@@ -2400,14 +2408,20 @@
   function init() {
     resize();
     particles = Array.from({ length: Math.floor(innerWidth * innerHeight / 18000) }, () => new Particle());
-    animate();
+    requestAnimationFrame(animate);
   }
 
-  function animate() {
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    particles.forEach(p => { p.update(); p.draw(); });
-    drawLines();
+  function animate(ts) {
     requestAnimationFrame(animate);
+    if (!lastRenderTs) lastRenderTs = ts;
+    const elapsed = ts - lastRenderTs;
+    if (elapsed < FRAME_MS) return;
+    lastRenderTs = ts - (elapsed % FRAME_MS);
+
+    const step = Math.min(elapsed / BASE_FRAME_MS, 5);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    particles.forEach(p => { p.update(step); p.draw(); });
+    drawLines();
   }
 
   init();

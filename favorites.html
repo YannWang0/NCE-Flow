@@ -16,38 +16,56 @@
   <script src="assets/app.js" defer></script>
   <script src="assets/favorites.js" defer></script>
 
-  <!-- 主题切换逻辑 - 使用 class-based 方法 -->
+  <!-- 主题切换逻辑 -->
   <script>
-    (function() {
-      if (!window.matchMedia) return;
+    (function () {
+      const THEME_KEY = 'nce_theme';
+      const SUN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      const MOON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
 
-      const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-      const applyTheme = function(isDark) {
-        if (!document.body) return;
-
-        document.body.classList.remove('dark-theme', 'light-theme');
-        document.body.classList.add(isDark ? 'dark-theme' : 'light-theme');
-
-        const originalDisplay = document.body.style.display;
-        document.body.style.display = 'none';
-        void document.body.offsetHeight;
-        document.body.style.display = originalDisplay;
-
-        document.body.style.transform = 'translateZ(0)';
-        setTimeout(() => { document.body.style.transform = ''; }, 0);
-      };
-
-      const handleChange = function(e) { applyTheme(e.matches); };
-
-      if (colorSchemeQuery.addEventListener) colorSchemeQuery.addEventListener('change', handleChange);
-      else if (colorSchemeQuery.addListener) colorSchemeQuery.addListener(handleChange);
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { applyTheme(colorSchemeQuery.matches); });
-      } else {
-        applyTheme(colorSchemeQuery.matches);
+      function getPreferredTheme() {
+        return localStorage.getItem(THEME_KEY) || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       }
+
+      function applyTheme(theme) {
+        if (!document.body) return;
+        const scrollX = window.scrollX || 0;
+        const scrollY = window.scrollY || 0;
+        document.body.classList.remove('dark-theme', 'light-theme');
+        document.body.classList.add(theme + '-theme');
+        try { document.documentElement.style.colorScheme = theme; } catch (_) { }
+        
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+          btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+          btn.setAttribute('aria-label', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+        }
+        requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
+      }
+
+      function toggleTheme() {
+        const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      }
+
+      function init() {
+        applyTheme(getPreferredTheme());
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.addEventListener('click', toggleTheme);
+      }
+
+      if (window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e) => {
+          if (!localStorage.getItem(THEME_KEY)) applyTheme(e.matches ? 'dark' : 'light');
+        };
+        if (mq.addEventListener) mq.addEventListener('change', handleChange);
+        else if (mq.addListener) mq.addListener(handleChange);
+      }
+
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
     })();
   </script>
 </head>
@@ -98,7 +116,7 @@
         </a>
       </p>
       <p class="byline">Designed &amp; Maintained by <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">Luzhenhua</a></p>
-      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">版本 1.7.5</a></p>
+      <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">版本 1.7.6</a></p>
       <div class="footer-actions">
         <a class="footer-btn" href="about.html">关于</a>
       </div>
@@ -216,15 +234,19 @@
       const cvs = document.getElementById('bg-canvas');
       if (!cvs) return;
 
-      const ctx = cvs.getContext('2d'),
-            dpr = window.devicePixelRatio || 1;
-      let w, h, particles = [];
+      const ctx = cvs.getContext('2d');
+      const DPR_CAP = 1.5;
+      const TARGET_FPS = 30;
+      const FRAME_MS = 1000 / TARGET_FPS;
+      const BASE_FRAME_MS = 1000 / 60;
+      let particles = [];
+      let lastRenderTs = 0;
 
       function resize(){
-        w = cvs.width  = innerWidth  * dpr;
-        h = cvs.height = innerHeight * dpr;
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.scale(dpr, dpr);
+        const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
+        cvs.width  = Math.floor(innerWidth  * dpr);
+        cvs.height = Math.floor(innerHeight * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
         cvs.style.width  = innerWidth  + 'px';
         cvs.style.height = innerHeight + 'px';
       }
@@ -238,9 +260,9 @@
           this.vy = (Math.random() - .5) * .3;
           this.r = Math.random() * 1.2 + .5;
         }
-        update(){
-          this.x += this.vx;
-          this.y += this.vy;
+        update(step){
+          this.x += this.vx * step;
+          this.y += this.vy * step;
           if(this.x < 0 || this.x > innerWidth) this.vx *= -1;
           if(this.y < 0 || this.y > innerHeight) this.vy *= -1;
         }
@@ -257,18 +279,21 @@
       }
 
       function drawLines(){
+        const maxDist = 100;
+        const maxDistSq = maxDist * maxDist;
         for(let i=0;i<particles.length;i++){
           for(let j=i+1;j<particles.length;j++){
             const dx = particles[i].x - particles[j].x,
-                  dy = particles[i].y - particles[j].y,
-                  dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 100){
+                  dy = particles[i].y - particles[j].y;
+            const distSq = dx*dx + dy*dy;
+            if(distSq < maxDistSq){
+              const dist = Math.sqrt(distSq);
               ctx.beginPath();
               ctx.moveTo(particles[i].x, particles[i].y);
               ctx.lineTo(particles[j].x, particles[j].y);
               ctx.strokeStyle = isDark()
-                ? `rgba(255,255,255,${1-dist/100})`
-                : `rgba(0,0,0,${.5-dist/200})`;
+                ? `rgba(255,255,255,${1-dist/maxDist})`
+                : `rgba(0,0,0,${.5-dist/(maxDist*2)})`;
               ctx.lineWidth = .5;
               ctx.stroke();
             }
@@ -279,14 +304,20 @@
       function init(){
         resize();
         particles = Array.from({length: Math.floor(innerWidth*innerHeight/18000)}, ()=>new Particle());
-        animate();
+        requestAnimationFrame(animate);
       }
 
-      function animate(){
-        ctx.clearRect(0,0,innerWidth,innerHeight);
-        particles.forEach(p=>{p.update();p.draw();});
-        drawLines();
+      function animate(ts){
         requestAnimationFrame(animate);
+        if(!lastRenderTs) lastRenderTs = ts;
+        const elapsed = ts - lastRenderTs;
+        if(elapsed < FRAME_MS) return;
+        lastRenderTs = ts - (elapsed % FRAME_MS);
+
+        const step = Math.min(elapsed / BASE_FRAME_MS, 5);
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        particles.forEach(p=>{p.update(step);p.draw();});
+        drawLines();
       }
 
       init();
