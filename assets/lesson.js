@@ -103,6 +103,14 @@
     const settingsPanel = qs('#settingsPanel');
     const settingsClose = qs('#settingsClose');
     const settingsDone = qs('#settingsDone');
+    const autoStopOverlay = qs('#autoStopOverlay');
+    const autoStopPanel = qs('#autoStopPanel');
+    const autoStopClose = qs('#autoStopClose');
+    const autoStopCancel = qs('#autoStopCancel');
+    const autoStopSave = qs('#autoStopSave');
+    const autoStopOn = qs('#autoStopOn');
+    const autoStopOff = qs('#autoStopOff');
+    const autoStopCountInput = qs('#autoStopCount');
     const prevLessonLink = qs('#prevLesson');
     const nextLessonLink = qs('#nextLesson');
     const speedButton = qs('#speed');
@@ -163,6 +171,9 @@
     const SKIP_INTRO_KEY = 'skipIntro';
     const SHADOW_REPEAT_KEY = 'shadowRepeatCount';
     const SHADOW_GAP_KEY = 'shadowGapMode';
+    const AUTO_STOP_ENABLED_KEY = 'autoStopEnabled';
+    const AUTO_STOP_COUNT_KEY = 'autoStopCount';
+    const AUTO_NEXT_PLAYED_KEY = 'nce_auto_next_played_lessons';
 
     function loadSentenceFavs() {
       try {
@@ -232,12 +243,50 @@
       if (!Number.isFinite(n)) return 2;
       return Math.min(9, Math.max(1, n));
     }
+    function normalizeAutoStopCount(value) {
+      const n = parseInt(value, 10);
+      if (!Number.isFinite(n)) return 3;
+      return Math.min(50, Math.max(1, n));
+    }
+    function getAutoNextPlayedLessons() {
+      try {
+        const raw = sessionStorage.getItem(AUTO_NEXT_PLAYED_KEY);
+        const n = parseInt(raw, 10);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      } catch (_) { return 0; }
+    }
+    function setAutoNextPlayedLessons(n) {
+      try { sessionStorage.setItem(AUTO_NEXT_PLAYED_KEY, String(Math.max(0, n | 0))); } catch (_) { }
+    }
+    function resetAutoNextPlayedLessons() {
+      try { sessionStorage.removeItem(AUTO_NEXT_PLAYED_KEY); } catch (_) { }
+    }
     let shadowRepeatTotal = normalizeShadowRepeat(localStorage.getItem(SHADOW_REPEAT_KEY));
     let shadowRepeatRemaining = shadowRepeatTotal;
     let shadowGapMode = localStorage.getItem(SHADOW_GAP_KEY) || 'medium';
     if (!Object.prototype.hasOwnProperty.call(SHADOW_GAP_RATIOS, shadowGapMode)) shadowGapMode = 'medium';
     let shadowGapTimer = 0;
     let shadowAutoPause = false;
+    let autoStopEnabled = localStorage.getItem(AUTO_STOP_ENABLED_KEY) === 'true';
+    let autoStopCount = normalizeAutoStopCount(localStorage.getItem(AUTO_STOP_COUNT_KEY));
+    let autoStopDraftEnabled = autoStopEnabled;
+    let autoStopDraftCount = autoStopCount;
+
+    function loadAutoStopSettings() {
+      autoStopEnabled = localStorage.getItem(AUTO_STOP_ENABLED_KEY) === 'true';
+      autoStopCount = normalizeAutoStopCount(localStorage.getItem(AUTO_STOP_COUNT_KEY));
+      autoStopDraftEnabled = autoStopEnabled;
+      autoStopDraftCount = autoStopCount;
+    }
+    function saveAutoStopSettings({ enabled, count }) {
+      autoStopEnabled = !!enabled;
+      autoStopCount = normalizeAutoStopCount(count);
+      autoStopDraftEnabled = autoStopEnabled;
+      autoStopDraftCount = autoStopCount;
+      try { localStorage.setItem(AUTO_STOP_ENABLED_KEY, autoStopEnabled.toString()); } catch (_) { }
+      try { localStorage.setItem(AUTO_STOP_COUNT_KEY, String(autoStopCount)); } catch (_) { }
+      resetAutoNextPlayedLessons();
+    }
 
     // 兼容旧版本：从旧的 loopMode 和 autoContinue 迁移
     if (!localStorage.getItem(AFTER_PLAY_KEY)) {
@@ -569,6 +618,17 @@
         afterPlayNextRadio.checked = afterPlay === 'next';
       }
     }
+    function reflectAutoStopSettings() {
+      if (autoStopOn && autoStopOff) {
+        autoStopOn.checked = !!autoStopDraftEnabled;
+        autoStopOff.checked = !autoStopDraftEnabled;
+      }
+      if (autoStopCountInput) {
+        autoStopCountInput.value = String(autoStopDraftCount);
+        autoStopCountInput.disabled = !autoStopDraftEnabled;
+        autoStopCountInput.style.opacity = autoStopDraftEnabled ? '' : '0.6';
+      }
+    }
     function reflectSkipIntro() {
       const skipIntroOnRadio = document.getElementById('skipIntroOn');
       const skipIntroOffRadio = document.getElementById('skipIntroOff');
@@ -589,6 +649,7 @@
     }
     reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro();
     reflectShadowSettings();
+    reflectAutoStopSettings();
 
     function setReadMode(mode) {
       if (!['continuous', 'single', 'listen', 'shadow'].includes(mode)) mode = 'continuous';
@@ -613,6 +674,7 @@
       afterPlay = mode;
       try { localStorage.setItem(AFTER_PLAY_KEY, afterPlay); } catch (_) { }
       reflectAfterPlay();
+      resetAutoNextPlayedLessons();
 
       // 自动续集：默认开启自动跟随（用户可再手动关闭，但本次选择会帮你打开）
       if (afterPlay === 'next' && !autoFollow) {
@@ -740,7 +802,12 @@
     }
 
     if (afterPlayNextRadio) {
-      afterPlayNextRadio.addEventListener('change', () => { if (afterPlayNextRadio.checked) setAfterPlay('next'); });
+      afterPlayNextRadio.addEventListener('change', () => {
+        if (afterPlayNextRadio.checked) {
+          setAfterPlay('next');
+          openAutoStop();
+        }
+      });
       // 当禁用时点击，显示提示
       const afterPlayNextLabel = document.querySelector('label[for="afterPlayNext"]');
       if (afterPlayNextLabel) {
@@ -950,11 +1017,11 @@
         .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null) : [];
     }
     function enableTrap() {
-      if (!settingsPanel) return;
-      const fs = getFocusable(settingsPanel); if (fs.length) fs[0].focus();
+      if (!_trapRoot) return;
+      const fs = getFocusable(_trapRoot); if (fs.length) fs[0].focus();
       _trapHandler = (e) => {
         if (e.key !== 'Tab') return;
-        const list = getFocusable(settingsPanel); if (!list.length) return;
+        const list = getFocusable(_trapRoot); if (!list.length) return;
         const first = list[0], last = list[list.length - 1];
         if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
         else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
@@ -962,15 +1029,18 @@
       document.addEventListener('keydown', _trapHandler);
     }
     function disableTrap() { if (_trapHandler) { document.removeEventListener('keydown', _trapHandler); _trapHandler = null; } }
+    let _trapRoot = null;
     function openSettings() {
       if (settingsOverlay) { settingsOverlay.hidden = false; requestAnimationFrame(() => settingsOverlay.classList.add('show')); }
       if (settingsPanel) { settingsPanel.hidden = false; requestAnimationFrame(() => settingsPanel.classList.add('show')); }
       try { _prevFocus = document.activeElement; } catch (_) { }
       try { document.body.style.overflow = 'hidden'; } catch (_) { }
+      _trapRoot = settingsPanel;
       enableTrap();
     }
     function closeSettings() {
       disableTrap();
+      _trapRoot = null;
       if (settingsOverlay) { settingsOverlay.classList.remove('show'); setTimeout(() => settingsOverlay.hidden = true, 200); }
       if (settingsPanel) { settingsPanel.classList.remove('show'); setTimeout(() => settingsPanel.hidden = true, 200); }
       try { document.body.style.overflow = ''; } catch (_) { }
@@ -1027,10 +1097,74 @@
       });
     }
 
+    // 自动关闭（睡眠定时）
+    let _autoStopReturnToSettings = false;
+    function openAutoStop() {
+      loadAutoStopSettings();
+      reflectAutoStopSettings();
+
+      // 从设置面板进入时，先立即关闭设置面板，避免叠加
+      _autoStopReturnToSettings = !!(settingsPanel && !settingsPanel.hidden);
+      if (_autoStopReturnToSettings) {
+        disableTrap();
+        _trapRoot = null;
+        if (settingsOverlay) { settingsOverlay.classList.remove('show'); settingsOverlay.hidden = true; }
+        if (settingsPanel) { settingsPanel.classList.remove('show'); settingsPanel.hidden = true; }
+        try { document.body.style.overflow = ''; } catch (_) { }
+      }
+
+      if (autoStopOverlay) { autoStopOverlay.hidden = false; requestAnimationFrame(() => autoStopOverlay.classList.add('show')); }
+      if (autoStopPanel) { autoStopPanel.hidden = false; requestAnimationFrame(() => autoStopPanel.classList.add('show')); }
+      try { _prevFocus = document.activeElement; } catch (_) { }
+      try { document.body.style.overflow = 'hidden'; } catch (_) { }
+      _trapRoot = autoStopPanel;
+      enableTrap();
+    }
+    function closeAutoStop({ reopenSettings = true } = {}) {
+      disableTrap();
+      _trapRoot = null;
+      if (autoStopOverlay) { autoStopOverlay.classList.remove('show'); setTimeout(() => autoStopOverlay.hidden = true, 200); }
+      if (autoStopPanel) { autoStopPanel.classList.remove('show'); setTimeout(() => autoStopPanel.hidden = true, 200); }
+      try { document.body.style.overflow = ''; } catch (_) { }
+
+      if (reopenSettings && _autoStopReturnToSettings) {
+        _autoStopReturnToSettings = false;
+        setTimeout(() => openSettings(), 210);
+        return;
+      }
+      try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch (_) { }
+    }
+    if (autoStopOverlay) autoStopOverlay.addEventListener('click', () => closeAutoStop());
+    if (autoStopClose) autoStopClose.addEventListener('click', () => closeAutoStop());
+    if (autoStopCancel) autoStopCancel.addEventListener('click', () => closeAutoStop());
+    if (autoStopOn) autoStopOn.addEventListener('change', () => { if (autoStopOn.checked) { autoStopDraftEnabled = true; reflectAutoStopSettings(); } });
+    if (autoStopOff) autoStopOff.addEventListener('change', () => { if (autoStopOff.checked) { autoStopDraftEnabled = false; reflectAutoStopSettings(); } });
+    if (autoStopCountInput) {
+      autoStopCountInput.addEventListener('change', () => {
+        autoStopDraftCount = normalizeAutoStopCount(autoStopCountInput.value);
+        reflectAutoStopSettings();
+      });
+      autoStopCountInput.addEventListener('blur', () => {
+        if (!autoStopCountInput.value) {
+          autoStopCountInput.value = String(autoStopDraftCount);
+        }
+      });
+    }
+    if (autoStopSave) {
+      autoStopSave.addEventListener('click', () => {
+        saveAutoStopSettings({ enabled: autoStopDraftEnabled, count: autoStopCountInput ? autoStopCountInput.value : autoStopDraftCount });
+        reflectAutoStopSettings();
+        showNotification('已保存自动关闭设置');
+        closeAutoStop();
+      });
+    }
+
     // Escape 键处理：优先关闭快捷键面板，然后关闭设置面板
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (shortcutsPanel && !shortcutsPanel.hidden) {
+        if (autoStopPanel && !autoStopPanel.hidden) {
+          closeAutoStop({ reopenSettings: true });
+        } else if (shortcutsPanel && !shortcutsPanel.hidden) {
           closeShortcuts();
         } else {
           closeSettings();
@@ -1226,6 +1360,8 @@
         audio.playbackRate = DEFAULT_RATE;
         setReadMode('continuous'); setFollowMode(true); setAfterPlay('none'); setSkipIntro(false);
         setShadowRepeatCount(2); setShadowGapMode('medium');
+        saveAutoStopSettings({ enabled: false, count: 3 });
+        reflectAutoStopSettings();
         reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro(); reflectShadowSettings();
         showNotification('已恢复默认设置');
       });
@@ -1968,6 +2104,15 @@
 
       // 自动下一课（仅在未开启整篇循环时，连读/听读模式）
       if ((readMode === 'continuous' || readMode === 'listen' || readMode === 'shadow') && afterPlay === 'next') {
+        if (autoStopEnabled) {
+          const played = getAutoNextPlayedLessons() + 1;
+          setAutoNextPlayedLessons(played);
+          if (played >= autoStopCount) {
+            showNotification(`已自动停止（连续播放 ${autoStopCount} 课）`);
+            resetAutoNextPlayedLessons();
+            return;
+          }
+        }
         autoNextLesson();
       }
     });
