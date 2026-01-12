@@ -28,6 +28,7 @@
 }
 
 /* 强制深色主题 class - 优先级高于媒体查询 */
+html.dark-theme,
 body.dark-theme {
   --bg: #09090b;
   --surface: #18181b;
@@ -40,6 +41,7 @@ body.dark-theme {
 }
 
 /* 强制浅色主题 class */
+html.light-theme,
 body.light-theme {
   --bg: #ffffff;
   --surface: #ffffff;
@@ -60,6 +62,10 @@ body {
   height: 100%
 }
 
+html {
+  background: var(--bg);
+}
+
 [hidden] {
   display: none !important
 }
@@ -68,7 +74,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Microsoft YaHei", sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: transparent;
   min-height: 100vh;
   padding: 20px;
   position: relative;
