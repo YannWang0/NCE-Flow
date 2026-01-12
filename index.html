@@ -72,7 +72,25 @@
           btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
           btn.setAttribute('aria-label', theme === 'dark' ? '切换到浅色模式' : '切换到深色模式');
         }
-        if (document.body) requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
+        if (document.body) {
+          requestAnimationFrame(() => {
+            // iOS/WKWebView: sometimes tiles don't repaint until a scroll happens.
+            const body = document.body;
+            const prevOpacity = body.style.opacity;
+            body.style.opacity = '0.99999';
+
+            const doc = document.documentElement;
+            const maxY = Math.max(0, doc.scrollHeight - window.innerHeight);
+            const y0 = Math.max(0, Math.min(scrollY, maxY));
+            const y1 = maxY ? (y0 < maxY ? y0 + 1 : Math.max(0, y0 - 1)) : y0;
+            window.scrollTo(scrollX, y1);
+
+            requestAnimationFrame(() => {
+              body.style.opacity = prevOpacity;
+              window.scrollTo(scrollX, y0);
+            });
+          });
+        }
       }
 
       function toggleTheme() {
@@ -333,7 +351,7 @@
       </p>
       <p class="byline">本网站由 <a href="https://luzhenhua.cn/" target="_blank" rel="noopener">卢振华</a> 开发与维护</p>
       <p class="version"><a href="https://github.com/luzhenhua/NCE-Flow/releases" target="_blank" rel="noopener">版本
-          1.7.7</a><span id="pwaFooterInstall" class="pwa-footer-link" hidden> · <a href="#">安装应用</a></span></p>
+          1.7.8</a><span id="pwaFooterInstall" class="pwa-footer-link" hidden> · <a href="#">安装应用</a></span></p>
       <div class="footer-actions">
         <a class="footer-btn" href="about.html">关于</a>
       </div>
