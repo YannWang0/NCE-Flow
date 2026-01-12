@@ -46,6 +46,18 @@
           document.body.classList.add(theme + '-theme');
         }
         try { root.style.colorScheme = theme; } catch (_) { }
+        const computedBg = (() => {
+          try {
+            const base = document.body ? getComputedStyle(document.body) : getComputedStyle(root);
+            return base.getPropertyValue('--bg').trim();
+          } catch (_) {
+            return '';
+          }
+        })();
+        const bg = computedBg || (theme === 'dark' ? '#09090b' : '#ffffff');
+        root.style.backgroundColor = bg;
+        if (document.body) document.body.style.backgroundColor = bg;
+        void root.offsetHeight;
         
         const btn = document.getElementById('themeToggleBtn');
         if (btn) {

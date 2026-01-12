@@ -63,7 +63,7 @@ body {
 }
 
 html {
-  background: var(--bg);
+  background-color: var(--bg);
 }
 
 [hidden] {
@@ -74,7 +74,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Microsoft YaHei", sans-serif;
   color: var(--text);
-  background: transparent;
+  background-color: var(--bg);
   min-height: 100vh;
   padding: 20px;
   position: relative;
