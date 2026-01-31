@@ -63,6 +63,107 @@
   const isIOSLike = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
 
   // --------------------------
+  // 自定义快捷键系统
+  // --------------------------
+  const SHORTCUTS_KEY = 'nce_shortcuts';
+
+  // 默认快捷键配置
+  const DEFAULT_SHORTCUTS = {
+    playPause: { key: ' ', label: '播放 / 暂停', group: '播放控制' },
+    replay: { key: 'r', label: '重播当前句', group: '播放控制' },
+    nextSentence: { key: 'ArrowRight', label: '下一句', group: '句子导航' },
+    prevSentence: { key: 'ArrowLeft', label: '上一句', group: '句子导航' },
+    volumeUp: { key: 'ArrowUp', label: '增加音量', group: '音量控制' },
+    volumeDown: { key: 'ArrowDown', label: '减少音量', group: '音量控制' },
+    toggleReveal: { key: 'v', label: '显示/隐藏当前句', group: '听读模式' },
+  };
+
+  // 键位显示名称映射
+  const KEY_DISPLAY_NAMES = {
+    ' ': 'Space',
+    'Spacebar': 'Space',
+    'ArrowUp': '↑',
+    'ArrowDown': '↓',
+    'ArrowLeft': '←',
+    'ArrowRight': '→',
+    'Enter': '↵',
+    'Escape': 'Esc',
+    'Backspace': '⌫',
+    'Tab': 'Tab',
+    'Delete': 'Del',
+  };
+
+  // 获取键的显示名称
+  function getKeyDisplayName(key) {
+    if (!key) return '?';
+    if (KEY_DISPLAY_NAMES[key]) return KEY_DISPLAY_NAMES[key];
+    // 单字符大写显示
+    if (key.length === 1) return key.toUpperCase();
+    return key;
+  }
+
+  // 加载用户自定义快捷键
+  function loadCustomShortcuts() {
+    try {
+      const saved = localStorage.getItem(SHORTCUTS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 合并到默认配置
+        const result = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+        for (const action of Object.keys(result)) {
+          if (parsed[action]) {
+            result[action].key = parsed[action];
+          }
+        }
+        return result;
+      }
+    } catch (_) { }
+    return JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+  }
+
+  // 保存自定义快捷键
+  function saveCustomShortcuts(shortcuts) {
+    try {
+      const toSave = {};
+      for (const action of Object.keys(shortcuts)) {
+        // 只保存与默认不同的键位
+        if (shortcuts[action].key !== DEFAULT_SHORTCUTS[action].key) {
+          toSave[action] = shortcuts[action].key;
+        }
+      }
+      if (Object.keys(toSave).length > 0) {
+        localStorage.setItem(SHORTCUTS_KEY, JSON.stringify(toSave));
+      } else {
+        localStorage.removeItem(SHORTCUTS_KEY);
+      }
+    } catch (_) { }
+  }
+
+  // 重置快捷键为默认
+  function resetShortcuts() {
+    try {
+      localStorage.removeItem(SHORTCUTS_KEY);
+    } catch (_) { }
+    return JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+  }
+
+  // 检查按键是否与已有快捷键冲突
+  function findConflict(shortcuts, action, newKey) {
+    const normalizedNew = newKey.toLowerCase();
+    for (const [act, config] of Object.entries(shortcuts)) {
+      if (act !== action && config.key.toLowerCase() === normalizedNew) {
+        return act;
+      }
+    }
+    return null;
+  }
+
+  // 当前快捷键配置
+  let currentShortcuts = loadCustomShortcuts();
+
+
+
+  // --------------------------
   // 主流程
   // --------------------------
   document.addEventListener('DOMContentLoaded', () => {
@@ -588,15 +689,25 @@
 
       const shadowSettingsGroup = document.getElementById('shadowSettingsGroup');
       const shadowRepeatInput = document.getElementById('shadowRepeat');
-      const shadowGapShort = document.getElementById('shadowGapShort');
-      const shadowGapMedium = document.getElementById('shadowGapMedium');
-      const shadowGapLong = document.getElementById('shadowGapLong');
       const shadowEnabled = isShadow;
-      if (shadowSettingsGroup) shadowSettingsGroup.classList.toggle('is-disabled', !shadowEnabled);
-      if (shadowRepeatInput) shadowRepeatInput.disabled = !shadowEnabled;
-      if (shadowGapShort) shadowGapShort.disabled = !shadowEnabled;
-      if (shadowGapMedium) shadowGapMedium.disabled = !shadowEnabled;
-      if (shadowGapLong) shadowGapLong.disabled = !shadowEnabled;
+
+      if (shadowSettingsGroup) {
+        shadowSettingsGroup.style.display = shadowEnabled ? 'flex' : 'none';
+        // Remove animation conflict if needed, or simply toggle visibility
+      }
+
+      // Update inputs state (though visibility handles most of it)
+      const inputs = [
+        document.getElementById('shadowRepeat'),
+        document.getElementById('shadowGapShort'),
+        document.getElementById('shadowGapMedium'),
+        document.getElementById('shadowGapLong'),
+        document.getElementById('shadowInc'),
+        document.getElementById('shadowDec')
+      ];
+      inputs.forEach(el => {
+        if (el) el.disabled = !shadowEnabled;
+      });
     }
     function reflectFollowMode() {
       const followOnRadio = document.getElementById('followOn');
@@ -822,51 +933,192 @@
 
     // 跟读设置
     const shadowRepeatInput = document.getElementById('shadowRepeat');
-    if (shadowRepeatInput) {
-      shadowRepeatInput.addEventListener('change', () => {
-        setShadowRepeatCount(shadowRepeatInput.value);
-      });
-      shadowRepeatInput.addEventListener('blur', () => {
-        if (!shadowRepeatInput.value) {
-          setShadowRepeatCount(shadowRepeatTotal);
-        }
+    // Stepper buttons for shadow repeat
+    const shadowInc = document.getElementById('shadowInc');
+    const shadowDec = document.getElementById('shadowDec');
+    if (shadowInc) {
+      shadowInc.addEventListener('click', () => {
+        const current = parseInt(shadowRepeatInput.value) || 2;
+        const val = Math.min(9, current + 1);
+        shadowRepeatInput.value = val;
+        setShadowRepeatCount(val);
       });
     }
-    const shadowGapShort = document.getElementById('shadowGapShort');
-    const shadowGapMedium = document.getElementById('shadowGapMedium');
-    const shadowGapLong = document.getElementById('shadowGapLong');
-    if (shadowGapShort) shadowGapShort.addEventListener('change', () => { if (shadowGapShort.checked) setShadowGapMode('short'); });
-    if (shadowGapMedium) shadowGapMedium.addEventListener('change', () => { if (shadowGapMedium.checked) setShadowGapMode('medium'); });
-    if (shadowGapLong) shadowGapLong.addEventListener('change', () => { if (shadowGapLong.checked) setShadowGapMode('long'); });
-
-    const shadowSettingsGroup = document.getElementById('shadowSettingsGroup');
-    if (shadowSettingsGroup) {
-      shadowSettingsGroup.addEventListener('click', (e) => {
-        if (readMode !== 'shadow') {
-          e.preventDefault();
-          showNotification('请切换到跟读模式');
-        }
+    if (shadowDec) {
+      shadowDec.addEventListener('click', () => {
+        const current = parseInt(shadowRepeatInput.value) || 2;
+        const val = Math.max(1, current - 1);
+        shadowRepeatInput.value = val;
+        setShadowRepeatCount(val);
       });
     }
 
-    // 跳过开头单选按钮事件
+    // 自动跟随 Checkbox Sync
+    const followToggleCheckbox = document.getElementById('followToggleCheckbox');
+    if (followToggleCheckbox) {
+      followToggleCheckbox.addEventListener('change', () => {
+        setFollowMode(followToggleCheckbox.checked);
+      });
+    }
+
+    // 播完后 Select Logic
+    const afterPlaySelect = document.getElementById('afterPlaySelect');
+    if (afterPlaySelect) {
+      afterPlaySelect.addEventListener('change', () => {
+        setAfterPlay(afterPlaySelect.value);
+      });
+
+      // Improve interaction: prevent impossible choices
+      afterPlaySelect.addEventListener('mousedown', () => {
+        const singleOption = afterPlaySelect.querySelector('option[value="single"]');
+        const allOption = afterPlaySelect.querySelector('option[value="all"]');
+
+        if (readMode === 'continuous' || readMode === 'shadow') {
+          if (singleOption) singleOption.disabled = true;
+          if (singleOption && singleOption.selected) afterPlaySelect.value = 'none'; // Fallback
+        } else {
+          if (singleOption) singleOption.disabled = false;
+        }
+
+        if (readMode === 'single') {
+          if (allOption) allOption.disabled = true;
+        } else {
+          if (allOption) allOption.disabled = false;
+        }
+      });
+    }
+
+    // 跳过开头 Checkbox Sync
+    const skipIntroCheckbox = document.getElementById('skipIntroCheckbox');
     const skipIntroOn = document.getElementById('skipIntroOn');
     const skipIntroOff = document.getElementById('skipIntroOff');
-    if (skipIntroOn) skipIntroOn.addEventListener('change', () => { if (skipIntroOn.checked) setSkipIntro(true); });
-    if (skipIntroOff) skipIntroOff.addEventListener('change', () => { if (skipIntroOff.checked) setSkipIntro(false); });
 
-    // 倍速
+    if (skipIntroCheckbox) {
+      skipIntroCheckbox.addEventListener('change', () => {
+        setSkipIntro(skipIntroCheckbox.checked);
+        // Sync hidden radios for consistency
+        if (skipIntroCheckbox.checked && skipIntroOn) skipIntroOn.checked = true;
+        if (!skipIntroCheckbox.checked && skipIntroOff) skipIntroOff.checked = true;
+      });
+    }
+    // Backward compatibility listeners for radios if they still exist or are manipulated by other code
+    if (skipIntroOn) skipIntroOn.addEventListener('change', () => { if (skipIntroOn.checked) { setSkipIntro(true); if (skipIntroCheckbox) skipIntroCheckbox.checked = true; } });
+    if (skipIntroOff) skipIntroOff.addEventListener('change', () => { if (skipIntroOff.checked) { setSkipIntro(false); if (skipIntroCheckbox) skipIntroCheckbox.checked = false; } });
+
+
+    // Initialize UI state based on loaded preferences
+    // MOVING THIS FUNCTION DOWN HERE TO ENSURE ALL VARIABLES ARE DEFINED
+    function reflectModernSettingsUI() {
+      if (followToggleCheckbox) followToggleCheckbox.checked = autoFollow;
+
+      if (afterPlaySelect) afterPlaySelect.value = afterPlay;
+
+      if (skipIntroCheckbox) skipIntroCheckbox.checked = skipIntro;
+
+      // Sync radios too if they exist
+      const followRadio = document.getElementById(autoFollow ? 'followOn' : 'followOff');
+      if (followRadio) followRadio.checked = true;
+    }
+
+    // Inject into reflect... functions or call initially
+    reflectModernSettingsUI();
+
+    // Override reflectFollowMode to ALSO update checkbox
+    const originalReflectFollowMode = typeof reflectFollowMode !== 'undefined' ? reflectFollowMode : () => { };
+    reflectFollowMode = function () {
+      originalReflectFollowMode(); // Call original updating logic
+      if (followToggleCheckbox) followToggleCheckbox.checked = autoFollow;
+    };
+
+    // Override reflectAfterPlay to ALSO update select
+    const originalReflectAfterPlay = typeof reflectAfterPlay !== 'undefined' ? reflectAfterPlay : () => { };
+    reflectAfterPlay = function () {
+      originalReflectAfterPlay();
+      if (afterPlaySelect) afterPlaySelect.value = afterPlay;
+    };
+
+
+    // --------------------------
+    // Auto Stop (Sleep Timer) Sync & Logic
+    // --------------------------
+    const autoStopToggleSync = document.getElementById('autoStopToggleSync');
+    if (autoStopToggleSync) {
+      autoStopToggleSync.addEventListener('change', () => {
+        // Sync draft state directly if panel is open, or global if not
+        autoStopDraftEnabled = autoStopToggleSync.checked;
+        // Sync legacy radios
+        if (autoStopOn) autoStopOn.checked = autoStopDraftEnabled;
+        if (autoStopOff) autoStopOff.checked = !autoStopDraftEnabled;
+        reflectAutoStopSettings();
+      });
+    }
+
+    const autoStopIncSync = document.getElementById('autoStopIncSync');
+    const autoStopDecSync = document.getElementById('autoStopDecSync');
+    if (autoStopIncSync && autoStopCountInput) {
+      autoStopIncSync.addEventListener('click', () => {
+        const val = parseInt(autoStopCountInput.value) || 3;
+        autoStopDraftCount = Math.min(50, val + 1);
+        reflectAutoStopSettings();
+      });
+    }
+    if (autoStopDecSync && autoStopCountInput) {
+      autoStopDecSync.addEventListener('click', () => {
+        const val = parseInt(autoStopCountInput.value) || 3;
+        autoStopDraftCount = Math.max(1, val - 1);
+        reflectAutoStopSettings();
+      });
+    }
+
+    // Override reflectAutoStopSettings
+    const originalReflectAutoStop = typeof reflectAutoStopSettings !== 'undefined' ? reflectAutoStopSettings : () => { };
+    reflectAutoStopSettings = function () {
+      originalReflectAutoStop();
+      if (autoStopToggleSync) autoStopToggleSync.checked = !!autoStopDraftEnabled;
+      // Also update stepper button states
+      if (autoStopIncSync) autoStopIncSync.disabled = !autoStopDraftEnabled;
+      if (autoStopDecSync) autoStopDecSync.disabled = !autoStopDraftEnabled;
+    };
+
+
+    // --------------------------
+    // 播放速度 (Segmented Control)
+    // --------------------------
+    const speedSegments = document.querySelectorAll('.speed-segments .seg-btn');
+    const speedDisplay = document.getElementById('speedDisplay');
+
+    function updateSpeedUI(rate) {
+      if (speedDisplay) speedDisplay.textContent = `${rate.toFixed(1)}x`;
+      speedSegments.forEach(btn => {
+        const btnRate = parseFloat(btn.dataset.rate);
+        // Use a small epsilon for float comparison if needed, or exact match for fixed values
+        if (Math.abs(btnRate - rate) < 0.05) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      // Sync legacy button if needed
+      if (speedButton) speedButton.textContent = `${rate.toFixed(2)}x`;
+    }
+
+    // Init speed UI
+    updateSpeedUI(savedRate);
     audio.playbackRate = savedRate;
-    if (speedButton) speedButton.textContent = `${savedRate.toFixed(2)}x`;
-    if (speedButton) speedButton.addEventListener('click', () => {
-      currentRateIndex = (currentRateIndex + 1) % rates.length;
-      const newRate = rates[currentRateIndex];
-      audio.playbackRate = newRate;
+
+    // Listeners for speed segments
+    speedSegments.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newRate = parseFloat(btn.dataset.rate);
+        audio.playbackRate = newRate;
+        // ratechange event listener will handle the UI update via standard flow
+      });
     });
+
     audio.addEventListener('ratechange', () => {
       const r = audio.playbackRate;
       try { localStorage.setItem('audioPlaybackRate', r); } catch (_) { }
-      if (speedButton) speedButton.textContent = `${r.toFixed(2)}x`;
+      updateSpeedUI(r);
       const i = rates.indexOf(r); if (i !== -1) currentRateIndex = i;
       scheduleAdvance();
     });
@@ -997,6 +1249,7 @@
       });
     }
 
+
     // 监听audio事件更新UI
     audio.addEventListener('play', updatePlayPauseIcon);
     audio.addEventListener('pause', updatePlayPauseIcon);
@@ -1057,8 +1310,139 @@
     const shortcutsPanel = qs('#shortcutsPanel');
     const shortcutsClose = qs('#shortcutsClose');
     const shortcutsDone = qs('#shortcutsDone');
+    const shortcutsReset = qs('#shortcutsReset');
+    const shortcutsContainer = qs('#shortcutsContainer');
+
+    // 当前正在编辑的动作
+    let editingAction = null;
+    let editingKbd = null;
+
+    // 渲染快捷键面板
+    function renderShortcutsPanel() {
+      if (!shortcutsContainer) return;
+
+      // 按分组组织快捷键
+      const groups = {};
+      for (const [action, config] of Object.entries(currentShortcuts)) {
+        if (!groups[config.group]) groups[config.group] = [];
+        groups[config.group].push({ action, ...config });
+      }
+
+      let html = '';
+      for (const [groupName, items] of Object.entries(groups)) {
+        html += `<div class="shortcuts-group"><h3>${groupName}</h3>`;
+        for (const item of items) {
+          const isCustom = item.key !== DEFAULT_SHORTCUTS[item.action].key;
+          const displayKey = getKeyDisplayName(item.key);
+          html += `
+            <div class="shortcut-item" data-action="${item.action}">
+              <kbd class="editable ${isCustom ? 'custom' : ''}" data-action="${item.action}" title="点击自定义">${displayKey}</kbd>
+              <span>${item.label}</span>
+            </div>
+          `;
+        }
+        html += '</div>';
+      }
+
+      shortcutsContainer.innerHTML = html;
+
+      // 绑定点击事件
+      shortcutsContainer.querySelectorAll('kbd.editable').forEach(kbd => {
+        kbd.addEventListener('click', (e) => {
+          e.stopPropagation();
+          startEditingShortcut(kbd.dataset.action, kbd);
+        });
+      });
+    }
+
+    // 开始编辑快捷键
+    function startEditingShortcut(action, kbdEl) {
+      // 如果已经在编辑其他快捷键,先取消
+      cancelEditing();
+
+      editingAction = action;
+      editingKbd = kbdEl;
+      kbdEl.classList.add('editing');
+      kbdEl.textContent = '按键...';
+
+      // 添加全局键盘监听
+      document.addEventListener('keydown', handleShortcutCapture, true);
+    }
+
+    // 处理快捷键捕获
+    function handleShortcutCapture(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Escape 取消编辑
+      if (e.key === 'Escape') {
+        cancelEditing();
+        return;
+      }
+
+      const newKey = e.key;
+
+      // 检查冲突
+      const conflict = findConflict(currentShortcuts, editingAction, newKey);
+      if (conflict) {
+        // 显示冲突动画
+        if (editingKbd) {
+          editingKbd.classList.add('conflict');
+          editingKbd.textContent = '冲突!';
+          setTimeout(() => {
+            if (editingKbd) {
+              editingKbd.classList.remove('conflict');
+              editingKbd.textContent = '按键...';
+            }
+          }, 600);
+        }
+        showNotification(`与「${currentShortcuts[conflict].label}」冲突`);
+        return;
+      }
+
+      // 更新快捷键
+      currentShortcuts[editingAction].key = newKey;
+      saveCustomShortcuts(currentShortcuts);
+
+      // 更新显示
+      finishEditing(newKey);
+      showNotification('快捷键已更新');
+    }
+
+    // 完成编辑
+    function finishEditing(newKey) {
+      document.removeEventListener('keydown', handleShortcutCapture, true);
+
+      if (editingKbd) {
+        editingKbd.classList.remove('editing');
+        editingKbd.textContent = getKeyDisplayName(newKey);
+
+        // 检查是否为自定义键位
+        const isCustom = currentShortcuts[editingAction].key !== DEFAULT_SHORTCUTS[editingAction].key;
+        editingKbd.classList.toggle('custom', isCustom);
+      }
+
+      editingAction = null;
+      editingKbd = null;
+    }
+
+    // 取消编辑
+    function cancelEditing() {
+      document.removeEventListener('keydown', handleShortcutCapture, true);
+
+      if (editingKbd && editingAction) {
+        editingKbd.classList.remove('editing');
+        editingKbd.textContent = getKeyDisplayName(currentShortcuts[editingAction].key);
+      }
+
+      editingAction = null;
+      editingKbd = null;
+    }
 
     function openShortcuts() {
+      // 取消可能的编辑状态
+      cancelEditing();
+
       // 先立即关闭设置面板,避免两个面板叠加显示
       if (settingsPanel && !settingsPanel.hidden) {
         disableTrap();
@@ -1066,21 +1450,37 @@
         if (settingsPanel) { settingsPanel.classList.remove('show'); settingsPanel.hidden = true; }
         try { document.body.style.overflow = ''; } catch (_) { }
       }
+
+      // 渲染面板
+      renderShortcutsPanel();
+
       if (shortcutsOverlay) { shortcutsOverlay.hidden = false; requestAnimationFrame(() => shortcutsOverlay.classList.add('show')); }
       if (shortcutsPanel) { shortcutsPanel.hidden = false; requestAnimationFrame(() => shortcutsPanel.classList.add('show')); }
       try { _prevFocus = document.activeElement; } catch (_) { }
       try { document.body.style.overflow = 'hidden'; } catch (_) { }
     }
+
     function closeShortcuts() {
+      cancelEditing();
       if (shortcutsOverlay) { shortcutsOverlay.classList.remove('show'); setTimeout(() => shortcutsOverlay.hidden = true, 200); }
       if (shortcutsPanel) { shortcutsPanel.classList.remove('show'); setTimeout(() => shortcutsPanel.hidden = true, 200); }
       try { document.body.style.overflow = ''; } catch (_) { }
       try { if (_prevFocus && _prevFocus.focus) _prevFocus.focus(); } catch (_) { }
     }
+
     if (shortcutsBtn) shortcutsBtn.addEventListener('click', openShortcuts);
     if (shortcutsOverlay) shortcutsOverlay.addEventListener('click', closeShortcuts);
     if (shortcutsClose) shortcutsClose.addEventListener('click', closeShortcuts);
     if (shortcutsDone) shortcutsDone.addEventListener('click', closeShortcuts);
+
+    // 恢复默认快捷键
+    if (shortcutsReset) {
+      shortcutsReset.addEventListener('click', () => {
+        currentShortcuts = resetShortcuts();
+        renderShortcutsPanel();
+        showNotification('已恢复默认快捷键');
+      });
+    }
 
     // 快捷键面板"返回设置"按钮
     const shortcutsBack = qs('#shortcutsBack');
@@ -1088,6 +1488,7 @@
       shortcutsBack.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        cancelEditing();
         // 立即关闭快捷键面板
         if (shortcutsOverlay) { shortcutsOverlay.classList.remove('show'); shortcutsOverlay.hidden = true; }
         if (shortcutsPanel) { shortcutsPanel.classList.remove('show'); shortcutsPanel.hidden = true; }
@@ -1096,6 +1497,7 @@
         openSettings();
       });
     }
+
 
     // 自动关闭（睡眠定时）
     let _autoStopReturnToSettings = false;
@@ -1216,6 +1618,14 @@
       }, 1000);
     }
 
+    // 检查按键是否匹配快捷键
+    function matchesShortcut(eventKey, action) {
+      const shortcutKey = currentShortcuts[action]?.key;
+      if (!shortcutKey) return false;
+      // 不区分大小写比较
+      return eventKey.toLowerCase() === shortcutKey.toLowerCase();
+    }
+
     document.addEventListener('keydown', (e) => {
       // 避免在输入框中触发快捷键
       const target = e.target;
@@ -1223,7 +1633,7 @@
         return;
       }
 
-      // ? 键 - 打开/关闭快捷键帮助
+      // ? 键 - 打开/关闭快捷键帮助（固定键位，不可自定义）
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         if (shortcutsPanel && !shortcutsPanel.hidden) {
@@ -1234,8 +1644,8 @@
         return;
       }
 
-      // ArrowUp - 音量增加（优先处理，避免和其他按键冲突）
-      if (e.key === 'ArrowUp') {
+      // 音量增加
+      if (matchesShortcut(e.key, 'volumeUp')) {
         e.preventDefault();
         const newVolume = Math.min(1, audio.volume + 0.1);
         audio.volume = newVolume;
@@ -1244,8 +1654,8 @@
         return;
       }
 
-      // ArrowDown - 音量减少（优先处理，避免和其他按键冲突）
-      if (e.key === 'ArrowDown') {
+      // 音量减少
+      if (matchesShortcut(e.key, 'volumeDown')) {
         e.preventDefault();
         const newVolume = Math.max(0, audio.volume - 0.1);
         audio.volume = newVolume;
@@ -1254,8 +1664,8 @@
         return;
       }
 
-      // Space - 播放/暂停
-      if (e.key === ' ' || e.key === 'Spacebar') {
+      // 播放/暂停
+      if (matchesShortcut(e.key, 'playPause')) {
         e.preventDefault();
         if (audio.paused) {
           if (readMode === 'shadow') {
@@ -1308,8 +1718,8 @@
         return;
       }
 
-      // ArrowRight 或 D - 下一句
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      // 下一句
+      if (matchesShortcut(e.key, 'nextSentence')) {
         e.preventDefault();
         const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
         const nextIdx = idx < 0 ? startIdx : Math.min(idx + 1, items.length - 1);
@@ -1319,8 +1729,8 @@
         return;
       }
 
-      // ArrowLeft 或 A - 上一句
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      // 上一句
+      if (matchesShortcut(e.key, 'prevSentence')) {
         e.preventDefault();
         const startIdx = readMode === 'shadow' ? shadowStartIndex : firstContentIndex;
         const prevIdx = idx < 0 ? startIdx : Math.max(idx - 1, 0);
@@ -1330,8 +1740,8 @@
         return;
       }
 
-      // R - 重播当前句
-      if (e.key === 'r' || e.key === 'R') {
+      // 重播当前句
+      if (matchesShortcut(e.key, 'replay')) {
         e.preventDefault();
         if (idx >= 0 && idx < items.length) {
           playSegment(idx, { manual: true });
@@ -1343,8 +1753,8 @@
         return;
       }
 
-      // V - 切换当前句显示/隐藏（听读模式）
-      if (e.key === 'v' || e.key === 'V') {
+      // 切换当前句显示/隐藏（听读模式）
+      if (matchesShortcut(e.key, 'toggleReveal')) {
         e.preventDefault();
         if (readMode === 'listen' && idx >= 0 && idx < items.length) {
           toggleSentenceReveal(idx);

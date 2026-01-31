@@ -58,7 +58,7 @@
         root.style.backgroundColor = bg;
         if (document.body) document.body.style.backgroundColor = bg;
         void root.offsetHeight;
-        
+
         const btn = document.getElementById('themeToggleBtn');
         if (btn) {
           btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
@@ -181,6 +181,16 @@
         <div class="about-section">
           <div class="about-heading">更新日志</div>
           <ul class="version-list">
+            <li class="version-item">
+              <div class="version-dot"></div>
+              <div class="version-header">
+                <span class="version-number">v1.8.0</span>
+                <span class="version-date">2026-01-31</span>
+              </div>
+              <div class="version-desc">
+                界面大改版：从头重构了设置面板，采用 Bento Grid 布局与 Vercel 极简设计风格；新增自定义快捷键功能，支持全键位配置；交互组件全面现代化（分段控制器、iOS 风格开关、步进器）。
+              </div>
+            </li>
             <li class="version-item">
               <div class="version-dot"></div>
               <div class="version-header">

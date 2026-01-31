@@ -57,7 +57,7 @@
         root.style.backgroundColor = bg;
         if (document.body) document.body.style.backgroundColor = bg;
         void root.offsetHeight;
-        
+
         const btn = document.getElementById('themeToggleBtn');
         if (btn) {
           btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
@@ -203,324 +203,356 @@
   </div>
   <!-- Settings Overlay/Panel -->
   <div id="settingsOverlay" class="settings-overlay" hidden></div>
-  <div id="settingsPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+  <div id="settingsPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
+    aria-labelledby="settingsTitle" hidden>
     <div class="settings-header">
-      <h2 id="settingsTitle">设置</h2>
-      <button id="settingsClose" class="icon-btn" aria-label="关闭设置" title="关闭">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none"
-          stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 5 L15 15 M15 5 L5 15"></path>
+      <h2 id="settingsTitle">偏好设置</h2>
+      <button id="settingsClose" class="icon-btn close-btn" aria-label="关闭设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
-    <div class="settings-body">
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
-          <div class="settings-label">阅读模式</div>
-        </div>
-        <div class="read-mode-options" role="radiogroup" aria-label="阅读模式">
-          <label class="mode-option">
+
+    <div class="settings-content-scroll">
+      <!-- Section 1: Reading Mode (Hero Section) -->
+      <div class="setting-section">
+        <h3 class="section-title">阅读模式</h3>
+        <div class="read-mode-grid" role="radiogroup" aria-label="阅读模式">
+          <!-- Continuous -->
+          <label class="bento-card mode-card">
             <input type="radio" id="readModeContinuous" name="readMode" value="continuous" checked>
-            <div class="mode-card-inner">
-              <div class="mode-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
               </div>
-              <div class="mode-info">
-                <div class="mode-name">连读</div>
-                <div class="mode-detail">自动播放下一句</div>
+              <div class="text-box">
+                <span class="card-title">连读</span>
+                <span class="card-desc">自动播放下一句</span>
               </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
             </div>
           </label>
 
-          <label class="mode-option">
+          <!-- Single -->
+          <label class="bento-card mode-card">
             <input type="radio" id="readModeSingle" name="readMode" value="single">
-            <div class="mode-card-inner">
-              <div class="mode-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
               </div>
-              <div class="mode-info">
-                <div class="mode-name">点读</div>
-                <div class="mode-detail">只播放点击句子</div>
+              <div class="text-box">
+                <span class="card-title">点读</span>
+                <span class="card-desc">点击播放单句</span>
               </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
             </div>
           </label>
 
-          <label class="mode-option">
+          <!-- Listen -->
+          <label class="bento-card mode-card">
             <input type="radio" id="readModeListen" name="readMode" value="listen">
-            <div class="mode-card-inner">
-              <div class="mode-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path
                     d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
                   </path>
                   <line x1="1" y1="1" x2="23" y2="23"></line>
                 </svg>
               </div>
-              <div class="mode-info">
-                <div class="mode-name">听读</div>
-                <div class="mode-detail">遮盖句子纯听力</div>
+              <div class="text-box">
+                <span class="card-title">听读</span>
+                <span class="card-desc">原文隐藏纯听力</span>
               </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
             </div>
           </label>
 
-          <label class="mode-option">
+          <!-- Shadow -->
+          <label class="bento-card mode-card">
             <input type="radio" id="readModeShadow" name="readMode" value="shadow">
-            <div class="mode-card-inner">
-              <div class="mode-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
+            <div class="card-content">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                   <line x1="12" y1="19" x2="12" y2="23"></line>
                   <line x1="8" y1="23" x2="16" y2="23"></line>
                 </svg>
               </div>
-              <div class="mode-info">
-                <div class="mode-name">跟读</div>
-                <div class="mode-detail">单句循环自动续句</div>
+              <div class="text-box">
+                <span class="card-title">跟读</span>
+                <span class="card-desc">单句循环复读</span>
               </div>
+              <div class="check-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg></div>
             </div>
           </label>
         </div>
       </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">播放速度</div>
-          <div class="settings-desc">点击切换常用倍速，自动记住你的选择。</div>
-        </div>
-        <div class="settings-control">
-          <button id="speed" class="back-inline" aria-label="速度">速度</button>
-        </div>
-      </div>
-      <div class="settings-group" id="shadowSettingsGroup">
-        <div class="settings-left">
-          <div class="settings-label">跟读设置</div>
-          <div class="settings-desc">单句循环次数与跟读间隔倍率设置。</div>
-        </div>
-        <div class="settings-control shadow-controls">
-          <div class="shadow-repeat">
-            <label class="shadow-label" for="shadowRepeat">循环</label>
-            <input id="shadowRepeat" class="shadow-number" type="number" min="1" max="9" step="1" inputmode="numeric"
-              pattern="[0-9]*" value="2" aria-label="跟读循环次数">
-            <span class="shadow-unit">遍</span>
+
+      <!-- Section: Shadow Settings (Conditional) -->
+      <div id="shadowSettingsGroup" class="setting-section" style="display:none;">
+        <h3 class="section-title">跟读配置</h3>
+        <div class="bento-card full-card shadow-config-card">
+          <div class="config-row">
+            <span class="label">循环次数</span>
+            <div class="stepper">
+              <button id="shadowDec" class="stepper-btn">−</button>
+              <input id="shadowRepeat" class="stepper-input" type="number" value="2" readonly>
+              <button id="shadowInc" class="stepper-btn">+</button>
+            </div>
           </div>
-          <div id="shadowGapCard" class="auto-continue-card" role="radiogroup" aria-label="跟读间隔">
-            <div class="auto-continue-option">
-              <input type="radio" id="shadowGapShort" name="shadowGap" value="short">
-              <label for="shadowGapShort">短</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="shadowGapMedium" name="shadowGap" value="medium">
-              <label for="shadowGapMedium">中</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="shadowGapLong" name="shadowGap" value="long">
-              <label for="shadowGapLong">长</label>
+          <div class="config-row border-top">
+            <span class="label">跟读间隔</span>
+            <div class="segmented-control small">
+              <div id="shadowGapCard" style="display:contents">
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapShort" name="shadowGap" value="short">
+                  <span>短</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapMedium" name="shadowGap" value="medium" checked>
+                  <span>中</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" id="shadowGapLong" name="shadowGap" value="long">
+                  <span>长</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">播完后</div>
-          <div class="settings-desc">播放结束后的行为设置。</div>
-        </div>
-        <div class="settings-control">
-          <div id="afterPlayCard" class="auto-continue-card" role="radiogroup" aria-label="播完后">
-            <div class="auto-continue-option">
-              <input type="radio" id="afterPlaySingle" name="afterPlay" value="single">
-              <label for="afterPlaySingle">单句循环</label>
+
+      <!-- Section 2: Controls & Toggles -->
+      <div class="setting-section">
+        <h3 class="section-title">播放控制</h3>
+        <div class="bento-grid-2">
+
+          <!-- Playback Speed -->
+          <div class="bento-card control-card">
+            <div class="card-header">
+              <span class="label">播放速度</span>
+              <span class="value-display" id="speedDisplay">1.0x</span>
             </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="afterPlayAll" name="afterPlay" value="all">
-              <label for="afterPlayAll">整篇循环</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="afterPlayNext" name="afterPlay" value="next">
-              <label for="afterPlayNext">自动续集</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="afterPlayNone" name="afterPlay" value="none" checked>
-              <label for="afterPlayNone">结束播放</label>
+            <!-- Custom Segmented Control for Speed -->
+            <div class="segmented-control speed-segments">
+              <button class="seg-btn" data-rate="0.8">0.8</button>
+              <button class="seg-btn active" data-rate="1.0">1.0</button>
+              <button class="seg-btn" data-rate="1.2">1.2</button>
+              <button class="seg-btn" data-rate="1.5">1.5</button>
+              <!-- Hidden original button for compatibility if needed, or remove completely -->
+              <button id="speed" hidden>Legacy</button>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">自动跟随</div>
-          <div class="settings-desc">播放时自动滚动定位到当前句子；关闭后不自动滚动。</div>
-        </div>
-        <div class="settings-control">
-          <div id="followCard" class="auto-continue-card" role="radiogroup" aria-label="自动跟随">
-            <div class="auto-continue-option">
-              <input type="radio" id="followOn" name="autoFollow" value="true" checked>
-              <label for="followOn">跟随</label>
+
+          <!-- After Play Action -->
+          <div class="bento-card control-card">
+            <div class="card-header">
+              <span class="label">播完后</span>
             </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="followOff" name="autoFollow" value="false">
-              <label for="followOff">不跟随</label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">跳过开头</div>
-          <div class="settings-desc">智能跳过课程标题和提示问题，直接开始正文学习。</div>
-        </div>
-        <div class="settings-control">
-          <div id="skipIntroCard" class="auto-continue-card" role="radiogroup" aria-label="跳过开头">
-            <div class="auto-continue-option">
-              <input type="radio" id="skipIntroOn" name="skipIntro" value="true">
-              <label for="skipIntroOn">开启</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="skipIntroOff" name="skipIntro" value="false" checked>
-              <label for="skipIntroOff">关闭</label>
+            <div class="select-wrapper">
+              <select id="afterPlaySelect" class="modern-select">
+                <option value="none">结束播放</option>
+                <option value="next">自动续集</option>
+                <option value="single">单句循环</option>
+                <option value="all">整篇循环</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <!-- Hidden radios for JS compatibility -->
+              <div style="display:none;" id="afterPlayCard">
+                <input type="radio" id="afterPlaySingle" name="afterPlay" value="single">
+                <input type="radio" id="afterPlayAll" name="afterPlay" value="all">
+                <input type="radio" id="afterPlayNext" name="afterPlay" value="next">
+                <input type="radio" id="afterPlayNone" name="afterPlay" value="none" checked>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">快捷键</div>
-          <div class="settings-desc">使用键盘快捷键提升学习效率。</div>
-        </div>
-        <div class="settings-control">
-          <button id="shortcutsToggle" class="back-inline" aria-label="快捷键帮助">查看</button>
+
+      <!-- Section 3: Toggles Row -->
+      <div class="setting-section">
+        <div class="toggles-list">
+
+          <!-- Auto Scroll -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">自动跟随</span>
+              <span class="toggle-desc">播放时高亮并滚动到当前句</span>
+            </div>
+            <label class="switch">
+              <!-- Using hidden radios to mimic checkbox behavior for compatibility or rewrite JS -->
+              <!-- New strategy: Use a real checkbox for UI, and sync with hidden radios -->
+              <input type="checkbox" id="followToggleCheckbox" checked>
+              <span class="slider round"></span>
+              <!-- Hidden radios for legacy JS -->
+              <div style="display:none;" id="followCard">
+                <input type="radio" id="followOn" name="autoFollow" value="true" checked>
+                <input type="radio" id="followOff" name="autoFollow" value="false">
+              </div>
+            </label>
+          </div>
+
+          <!-- Skip Intro -->
+          <div class="toggle-row border-top">
+            <div class="toggle-info">
+              <span class="toggle-label">跳过开头</span>
+              <span class="toggle-desc">自动跳过标题和引导语</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="skipIntroCheckbox">
+              <span class="slider round"></span>
+              <!-- Hidden radios for legacy JS -->
+              <div style="display:none;" id="skipIntroCard">
+                <input type="radio" id="skipIntroOn" name="skipIntro" value="true">
+                <input type="radio" id="skipIntroOff" name="skipIntro" value="false" checked>
+              </div>
+            </label>
+          </div>
+
         </div>
       </div>
+
+      <!-- Section 4: Shadow Settings (Removed: Moved to Section 1) -->
+
+      <!-- Bottom Actions -->
+      <div class="setting-section action-section">
+        <button id="shortcutsToggle" class="action-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z">
+            </path>
+          </svg>
+          <span>键盘快捷键</span>
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
     </div>
-    <div class="settings-footer">
-      <button id="settingsReset" class="btn">恢复默认</button>
-      <button id="settingsDone" class="btn-nav">完成</button>
+
+    <div class="settings-footer-modern">
+      <button id="settingsReset" class="text-btn">恢复默认</button>
+      <button id="settingsDone" class="primary-btn">完成</button>
     </div>
   </div>
 
   <!-- Shortcuts Help Panel -->
   <div id="shortcutsOverlay" class="settings-overlay" hidden></div>
-  <div id="shortcutsPanel" class="settings-panel shortcuts-panel" role="dialog" aria-modal="true"
+  <div id="shortcutsPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
     aria-labelledby="shortcutsTitle" hidden>
     <div class="settings-header">
       <h2 id="shortcutsTitle">快捷键</h2>
-      <button id="shortcutsClose" class="icon-btn" aria-label="关闭快捷键帮助" title="关闭">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none"
-          stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 5 L15 15 M15 5 L5 15"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="settings-body">
-      <div class="shortcuts-group">
-        <h3>播放控制</h3>
-        <div class="shortcut-item">
-          <kbd>Space</kbd>
-          <span>播放 / 暂停</span>
-        </div>
-        <div class="shortcut-item">
-          <kbd>R</kbd>
-          <span>重播当前句</span>
-        </div>
-      </div>
-      <div class="shortcuts-group">
-        <h3>句子导航</h3>
-        <div class="shortcut-item">
-          <kbd>→</kbd> 或 <kbd>D</kbd>
-          <span>下一句</span>
-        </div>
-        <div class="shortcut-item">
-          <kbd>←</kbd> 或 <kbd>A</kbd>
-          <span>上一句</span>
-        </div>
-      </div>
-      <div class="shortcuts-group">
-        <h3>音量控制</h3>
-        <div class="shortcut-item">
-          <kbd>↑</kbd>
-          <span>增加音量</span>
-        </div>
-        <div class="shortcut-item">
-          <kbd>↓</kbd>
-          <span>减少音量</span>
-        </div>
-      </div>
-      <div class="shortcuts-group">
-        <h3>听读模式</h3>
-        <div class="shortcut-item">
-          <kbd>点击按钮</kbd>
-          <span>显示/隐藏文本</span>
-        </div>
-        <div class="shortcut-item">
-          <kbd>V</kbd>
-          <span>显示/隐藏当前句</span>
-        </div>
-      </div>
-    </div>
-    <div class="settings-footer">
-      <button id="shortcutsBack" class="btn">返回设置</button>
-      <button id="shortcutsDone" class="btn-nav">完成</button>
-    </div>
-  </div>
-
-  <!-- Auto Stop (Sleep Timer) Panel -->
-  <div id="autoStopOverlay" class="settings-overlay" hidden></div>
-  <div id="autoStopPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="autoStopTitle" hidden>
-    <div class="settings-header">
-      <h2 id="autoStopTitle">自动关闭</h2>
-      <button id="autoStopClose" class="icon-btn" aria-label="关闭自动关闭设置" title="关闭">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button id="shortcutsClose" class="icon-btn close-btn" aria-label="关闭快捷键帮助">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
-    <div class="settings-content">
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">睡眠定时</div>
-          <div class="settings-desc">仅在“自动续集”开启时生效：连续播放若干课后停止自动跳转。</div>
-        </div>
-        <div class="settings-control">
-          <div id="autoStopCard" class="auto-continue-card" role="radiogroup" aria-label="自动关闭">
-            <div class="auto-continue-option">
-              <input type="radio" id="autoStopOn" name="autoStop" value="true">
-              <label for="autoStopOn">开启</label>
-            </div>
-            <div class="auto-continue-option">
-              <input type="radio" id="autoStopOff" name="autoStop" value="false" checked>
-              <label for="autoStopOff">关闭</label>
-            </div>
+
+    <div class="settings-content-scroll">
+      <div class="shortcuts-tip-card bento-card"
+        style="padding: 12px; display: flex; align-items: center; gap: 8px; background: var(--surface);">
+        <svg style="width: 16px; height: 16px; color: var(--muted);" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span style="font-size: 13px; color: var(--muted);">点击按键可自定义配置，冲突时会有提示。</span>
+      </div>
+      <div id="shortcutsContainer" class="shortcuts-grid-layout">
+        <!-- 由 JS 动态渲染 -->
+      </div>
+    </div>
+
+    <div class="settings-footer-modern">
+      <button id="shortcutsReset" class="text-btn">恢复默认</button>
+      <div style="flex:1"></div>
+      <button id="shortcutsBack" class="text-btn" style="margin-right: 12px;">返回设置</button>
+      <button id="shortcutsDone" class="primary-btn">完成</button>
+    </div>
+  </div>
+
+  <!-- Auto Stop (Sleep Timer) Panel -->
+  <div id="autoStopOverlay" class="settings-overlay" hidden></div>
+  <div id="autoStopPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true"
+    aria-labelledby="autoStopTitle" hidden>
+    <div class="settings-header">
+      <h2 id="autoStopTitle">自动关闭</h2>
+      <button id="autoStopClose" class="icon-btn close-btn" aria-label="关闭自动关闭设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="settings-content-scroll">
+      <!-- Enable Toggle -->
+      <div class="setting-section">
+        <div class="toggle-row bento-card" style="border-radius: 12px;">
+          <div class="toggle-info">
+            <span class="toggle-label">启用定时</span>
+            <span class="toggle-desc">在连续播放数课后自动停止</span>
           </div>
+          <label class="switch">
+            <input type="checkbox" id="autoStopToggleSync"> <!-- Sync via JS -->
+            <span class="slider round"></span>
+            <!-- Legacy Radios for JS compatibility -->
+            <div id="autoStopCard" style="display:none;">
+              <input type="radio" id="autoStopOn" name="autoStop" value="true">
+              <input type="radio" id="autoStopOff" name="autoStop" value="false" checked>
+            </div>
+          </label>
         </div>
       </div>
-      <div class="settings-group">
-        <div class="settings-left">
-          <div class="settings-label">连续</div>
-          <div class="settings-desc">自动续播多少课后停止（包含当前课）。</div>
-        </div>
-        <div class="settings-control shadow-controls">
-          <div class="shadow-repeat">
-            <label class="shadow-label" for="autoStopCount">课</label>
-            <input id="autoStopCount" class="shadow-number" type="number" min="1" max="50" step="1"
-              inputmode="numeric" pattern="[0-9]*" value="3" aria-label="连续播放课数">
-            <span class="shadow-unit">节</span>
+
+      <!-- Count Config -->
+      <div class="setting-section">
+        <h3 class="section-title">设置时长</h3>
+        <div class="bento-card full-card">
+          <div class="config-row">
+            <span class="label">持续播放</span>
+            <div class="stepper">
+              <button id="autoStopDecSync" class="stepper-btn">−</button>
+              <input id="autoStopCount" class="stepper-input" type="number" min="1" max="50" value="3"
+                aria-label="连续播放课数">
+              <button id="autoStopIncSync" class="stepper-btn">+</button>
+            </div>
+            <span class="label" style="font-size: 13px; color: var(--muted); margin-left: 4px;">课</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="settings-footer">
-      <button id="autoStopCancel" class="btn">取消</button>
-      <button id="autoStopSave" class="btn-nav">保存</button>
+
+    <div class="settings-footer-modern">
+      <button id="autoStopCancel" class="text-btn">取消</button>
+      <button id="autoStopSave" class="primary-btn">保存</button>
     </div>
   </div>
 
