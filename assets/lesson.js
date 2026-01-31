@@ -221,7 +221,7 @@
     let sentenceFavSet = new Set(sentenceFavs.map(x => x.id));
 
     // 速率
-    const rates = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 0.75, 1.0];
+    const rates = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 0.5, 0.75, 1.0];
     const DEFAULT_RATE = 1.0;
     let savedRate = parseFloat(localStorage.getItem('audioPlaybackRate'));
     if (isNaN(savedRate) || !rates.includes(savedRate)) savedRate = DEFAULT_RATE;
