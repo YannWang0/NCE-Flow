@@ -6,16 +6,18 @@
   // --------------------------
   // 工具 & 解析
   // --------------------------
+  const {
+    timeTagsToSeconds, hasCJK, KEY_DISPLAY_NAMES, getKeyDisplayName,
+    findConflict, normalizeShadowRepeat, normalizeAutoStopCount,
+    shouldSkipLine, findFirstContentIndex, formatTime,
+    countWords, clamp, seekLooksOk
+  } = NCEUtils;
+
   const LINE_RE = /^((?:\[\d+:\d+(?:\.\d+)?\])+)(.*)$/;
   const TIME_RE = /\[(\d+):(\d+(?:\.\d+)?)\]/g;
   const META_RE = /^\[(al|ar|ti|by):(.+)\]$/i;
 
-  function timeTagsToSeconds(tags) {
-    const m = /\[(\d+):(\d+(?:\.\d+)?)\]/.exec(tags);
-    if (!m) return 0;
-    return parseInt(m[1], 10) * 60 + parseFloat(m[2]);
-  }
-  function hasCJK(s) { return /[\u3400-\u9FFF\uF900-\uFAFF]/.test(s) }
+
   async function fetchText(url) { const r = await fetch(url); if (!r.ok) throw new Error('Fetch failed ' + url); return await r.text(); }
 
   async function loadLrc(url) {
@@ -78,29 +80,6 @@
     toggleReveal: { key: 'v', label: '显示/隐藏当前句', group: '听读模式' },
   };
 
-  // 键位显示名称映射
-  const KEY_DISPLAY_NAMES = {
-    ' ': 'Space',
-    'Spacebar': 'Space',
-    'ArrowUp': '↑',
-    'ArrowDown': '↓',
-    'ArrowLeft': '←',
-    'ArrowRight': '→',
-    'Enter': '↵',
-    'Escape': 'Esc',
-    'Backspace': '⌫',
-    'Tab': 'Tab',
-    'Delete': 'Del',
-  };
-
-  // 获取键的显示名称
-  function getKeyDisplayName(key) {
-    if (!key) return '?';
-    if (KEY_DISPLAY_NAMES[key]) return KEY_DISPLAY_NAMES[key];
-    // 单字符大写显示
-    if (key.length === 1) return key.toUpperCase();
-    return key;
-  }
 
   // 加载用户自定义快捷键
   function loadCustomShortcuts() {
@@ -145,17 +124,6 @@
       localStorage.removeItem(SHORTCUTS_KEY);
     } catch (_) { }
     return JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
-  }
-
-  // 检查按键是否与已有快捷键冲突
-  function findConflict(shortcuts, action, newKey) {
-    const normalizedNew = newKey.toLowerCase();
-    for (const [act, config] of Object.entries(shortcuts)) {
-      if (act !== action && config.key.toLowerCase() === normalizedNew) {
-        return act;
-      }
-    }
-    return null;
   }
 
   // 当前快捷键配置
@@ -322,11 +290,28 @@
     let sentenceFavSet = new Set(sentenceFavs.map(x => x.id));
 
     // 速率
-    const rates = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 0.5, 0.75, 1.0];
+    const MIN_RATE = 0.5;
+    const MAX_RATE = 2.5;
     const DEFAULT_RATE = 1.0;
-    let savedRate = parseFloat(localStorage.getItem('audioPlaybackRate'));
-    if (isNaN(savedRate) || !rates.includes(savedRate)) savedRate = DEFAULT_RATE;
-    let currentRateIndex = Math.max(0, rates.indexOf(savedRate));
+    function parseRateValue(value) {
+      if (value === null || value === undefined) return NaN;
+      const text = String(value).trim().replace(/，/g, '.').replace(/,/g, '.');
+      if (!text) return NaN;
+      const n = Number(text);
+      return Number.isFinite(n) ? n : NaN;
+    }
+    function normalizePlaybackRate(value, fallback = DEFAULT_RATE) {
+      const parsed = parseRateValue(value);
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.round(clamp(parsed, MIN_RATE, MAX_RATE) * 100) / 100;
+    }
+    function formatRateValue(value) {
+      const n = Math.round(Number(value) * 100) / 100;
+      if (!Number.isFinite(n)) return DEFAULT_RATE.toFixed(1);
+      const oneDecimal = Math.round(n * 10) / 10;
+      return Math.abs(n - oneDecimal) < 0.001 ? oneDecimal.toFixed(1) : n.toFixed(2);
+    }
+    let savedRate = normalizePlaybackRate(localStorage.getItem('audioPlaybackRate'), DEFAULT_RATE);
 
     // 读取模式/跟随/播完后
     let readMode = localStorage.getItem(MODE_KEY) || 'continuous'; // 'continuous' | 'single' | 'listen' | 'shadow'
@@ -339,16 +324,6 @@
     let shadowStartIndex = 0; // 跟读模式的正文起点
 
     const SHADOW_GAP_RATIOS = { short: 0.8, medium: 1.0, long: 1.3 };
-    function normalizeShadowRepeat(value) {
-      const n = parseInt(value, 10);
-      if (!Number.isFinite(n)) return 2;
-      return Math.min(9, Math.max(1, n));
-    }
-    function normalizeAutoStopCount(value) {
-      const n = parseInt(value, 10);
-      if (!Number.isFinite(n)) return 3;
-      return Math.min(50, Math.max(1, n));
-    }
     function getAutoNextPlayedLessons() {
       try {
         const raw = sessionStorage.getItem(AUTO_NEXT_PLAYED_KEY);
@@ -484,91 +459,6 @@
       if (metadataReady) return;
       try { await once(audio, 'loadedmetadata', 5000); metadataReady = true; }
       catch (_) { /* 忽略，后续 seek 仍会尽力 */ }
-    }
-
-    // --------------------------
-    // 跳过开头：智能识别逻辑
-    // --------------------------
-    /**
-     * 判断是否应该跳过某一行（高置信度检测）
-     * @param {Object} item - 句子对象 {start, en, cn}
-     * @param {number} index - 句子索引
-     * @returns {boolean} - true 表示应该跳过
-     */
-    function shouldSkipLine(item, index, opts = {}) {
-      const en = item.en.trim();
-      const cn = item.cn ? item.cn.trim() : '';
-      const skipQuestions = !!opts.skipQuestions;
-      if (!en) return true; // 空行跳过
-
-      // 规则1: 跳过 "Lesson X" + "第X课" 格式（已被解析分离）
-      if (/^Lesson\s+\d+$/i.test(en) && /^第\d+课$/.test(cn)) {
-        return true;
-      }
-
-      // 规则2: 跳过 "Listen to the tape then answer this question." (100% 置信度)
-      if (/Listen to the tape/i.test(en)) {
-        return true;
-      }
-
-      // 规则3: 跳过开头的课程标题（基于时间和内容特征）
-      // 标题特征：有中文翻译，不是问句
-      // 时间分布：标题(1.5-3s), 问题(7-15s，最早7.22s)
-      if (cn && en.length < 80 && cn.length < 80) {
-        // 情况1：时间 < 7秒 → 一定是标题，直接跳过
-        if (item.start < 7) {
-          return true;
-        }
-        // 情况2：时间 7-10秒 → 可能是标题或问题
-        // 只有不是问号结尾才跳过（保护问题）
-        if (item.start < 10 && !en.endsWith('?')) {
-          return true;
-        }
-      }
-
-      // 可选：跟读模式下跳过提示问题（通常以问号结尾，在 7-15 秒）
-      const isQuestion = en.endsWith('?') || cn.endsWith('？');
-      if (skipQuestions && isQuestion && item.start < 20 && index < 6) {
-        return true;
-      }
-
-      // 默认不跳过听力理解问题
-
-      return false;
-    }
-
-    /**
-     * 找到第一句正文的索引（高置信度）
-     * @param {Array} items - 所有句子
-     * @returns {number} - 第一句正文的索引，如果无法确定则返回 0
-     */
-    function findFirstContentIndex(items, opts = {}) {
-      if (!items || items.length === 0) return 0;
-
-      // 只检查前 10 行，避免误判
-      const checkLimit = Math.min(10, items.length);
-      let skipCount = 0;
-
-      for (let i = 0; i < checkLimit; i++) {
-        if (shouldSkipLine(items[i], i, opts)) {
-          skipCount++;
-        } else {
-          // 找到了第一句正文
-          // 但需要确保至少跳过了 1 行（避免误判导致什么都不跳）
-          if (skipCount > 0) {
-            console.log(`[跳过开头] 智能识别成功：跳过前 ${skipCount} 行，从索引 ${i} 开始播放`);
-            return i;
-          } else {
-            // 第一行就是正文，不跳过
-            console.log('[跳过开头] 第一行即为正文，不跳过');
-            return 0;
-          }
-        }
-      }
-
-      // 如果前 10 行都被标记为跳过，说明识别可能有问题，保守起见不跳过
-      console.log('[跳过开头] 未能确定第一句正文位置，为安全起见从头开始');
-      return 0;
     }
 
     // --------------------------
@@ -1086,20 +976,47 @@
     // --------------------------
     const speedSegments = document.querySelectorAll('.speed-segments .seg-btn');
     const speedDisplay = document.getElementById('speedDisplay');
+    const speedCustomInput = document.getElementById('speedCustomInput');
 
     function updateSpeedUI(rate) {
-      if (speedDisplay) speedDisplay.textContent = `${rate.toFixed(1)}x`;
+      const normalized = normalizePlaybackRate(rate, DEFAULT_RATE);
+      const text = `${formatRateValue(normalized)}x`;
+      if (speedDisplay) speedDisplay.textContent = text;
       speedSegments.forEach(btn => {
         const btnRate = parseFloat(btn.dataset.rate);
-        // Use a small epsilon for float comparison if needed, or exact match for fixed values
-        if (Math.abs(btnRate - rate) < 0.05) {
+        if (Math.abs(btnRate - normalized) < 0.001) {
           btn.classList.add('active');
         } else {
           btn.classList.remove('active');
         }
       });
+      if (speedCustomInput) speedCustomInput.value = formatRateValue(normalized);
       // Sync legacy button if needed
-      if (speedButton) speedButton.textContent = `${rate.toFixed(2)}x`;
+      if (speedButton) speedButton.textContent = text;
+    }
+
+    function applyPlaybackRate(rate) {
+      const normalized = normalizePlaybackRate(rate, savedRate);
+      if (Math.abs((audio.playbackRate || DEFAULT_RATE) - normalized) < 0.001) {
+        updateSpeedUI(normalized);
+        return;
+      }
+      audio.playbackRate = normalized;
+    }
+
+    function applyCustomRate({ notifyInvalid = false, notifyClamped = false } = {}) {
+      if (!speedCustomInput) return;
+      const parsed = parseRateValue(speedCustomInput.value);
+      if (!Number.isFinite(parsed)) {
+        speedCustomInput.value = formatRateValue(audio.playbackRate || savedRate || DEFAULT_RATE);
+        if (notifyInvalid) showNotification(`请输入 ${MIN_RATE.toFixed(1)} 到 ${MAX_RATE.toFixed(1)} 之间的数字`);
+        return;
+      }
+      const normalized = normalizePlaybackRate(parsed, DEFAULT_RATE);
+      if (notifyClamped && Math.abs(parsed - normalized) > 0.001) {
+        showNotification(`倍速已限制为 ${MIN_RATE.toFixed(1)}x - ${MAX_RATE.toFixed(1)}x`);
+      }
+      applyPlaybackRate(normalized);
     }
 
     // Init speed UI
@@ -1109,17 +1026,30 @@
     // Listeners for speed segments
     speedSegments.forEach(btn => {
       btn.addEventListener('click', () => {
-        const newRate = parseFloat(btn.dataset.rate);
-        audio.playbackRate = newRate;
-        // ratechange event listener will handle the UI update via standard flow
+        applyPlaybackRate(btn.dataset.rate);
       });
     });
 
+    if (speedCustomInput) {
+      speedCustomInput.addEventListener('change', () => applyCustomRate({ notifyInvalid: true, notifyClamped: true }));
+      speedCustomInput.addEventListener('blur', () => applyCustomRate());
+      speedCustomInput.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        applyCustomRate({ notifyInvalid: true, notifyClamped: true });
+        speedCustomInput.blur();
+      });
+    }
+
     audio.addEventListener('ratechange', () => {
-      const r = audio.playbackRate;
-      try { localStorage.setItem('audioPlaybackRate', r); } catch (_) { }
-      updateSpeedUI(r);
-      const i = rates.indexOf(r); if (i !== -1) currentRateIndex = i;
+      const normalized = normalizePlaybackRate(audio.playbackRate, DEFAULT_RATE);
+      if (Math.abs(audio.playbackRate - normalized) > 0.001) {
+        audio.playbackRate = normalized;
+        return;
+      }
+      savedRate = normalized;
+      try { localStorage.setItem('audioPlaybackRate', String(savedRate)); } catch (_) { }
+      updateSpeedUI(savedRate);
       scheduleAdvance();
     });
 
@@ -1154,13 +1084,6 @@
     const progressBar = qs('#progressBar');
     const progressFilled = qs('#progressFilled');
 
-    // 格式化时间显示
-    function formatTime(seconds) {
-      if (!isFinite(seconds) || seconds < 0) return '0:00';
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${String(secs).padStart(2, '0')}`;
-    }
 
     // 更新播放/暂停图标
     function updatePlayPauseIcon() {
@@ -1888,11 +1811,6 @@
     const NEAR_WINDOW_MS = isIOSLike ? 160 : 120;
     const MAX_CHUNK_MS = 10000;
 
-    function countWords(text) {
-      if (!text) return 0;
-      const parts = text.trim().split(/\s+/).filter(Boolean);
-      return parts.length;
-    }
     function estimateShadowGapSeconds(item, endSnap) {
       if (!item) return 1.5;
       const baseEnd = (Number.isFinite(endSnap) && endSnap > item.start) ? endSnap : computeEnd(item);
@@ -1927,13 +1845,6 @@
             isScheduling = false; scheduleTime = 0;
 
             // 点读：暂停在段末
-            console.log('[循环调试] scheduleAdvance到达段末，暂停播放', {
-              idx,
-              afterPlay,
-              loopReplayPending,
-              currentTime: audio.currentTime,
-              segmentEnd: endSnap
-            });
             if (readMode === 'shadow') {
               handleShadowSegmentEnd(endSnap);
               return;
@@ -1943,28 +1854,14 @@
 
             // 单句循环：标记循环等待，稍后重播
             if (afterPlay === 'single' && idx >= 0 && idx < items.length && !loopReplayPending) {
-              console.log('[循环调试] 设置单句循环重播，300ms后执行');
               loopReplayPending = true;
               setTimeout(() => {
-                console.log('[循环调试] 300ms后检查循环条件', {
-                  loopReplayPending,
-                  afterPlay,
-                  idx
-                });
                 if (loopReplayPending && afterPlay === 'single') {
                   loopReplayPending = false;
-                  console.log('[循环调试] 开始执行循环重播 playSegment');
                   playSegment(idx, { manual: false });
-                } else {
-                  console.log('[循环调试] 循环条件不满足，取消重播');
                 }
               }, 300);
             } else {
-              console.log('[循环调试] 不满足循环条件，不设置重播', {
-                afterPlay,
-                loopReplayPending,
-                idx
-              });
             }
           } else {
             segmentRaf = raf(step);
@@ -2043,11 +1940,6 @@
     const SEEK_OK_EPS = 0.25;
     const SEEK_TIMEOUT_MS = isIOSLike ? 2500 : 1200;
 
-    function seekLooksOk(target, actual) {
-      if (!Number.isFinite(target) || target <= 0.5) return true;
-      return Math.abs((actual || 0) - target) <= SEEK_OK_EPS;
-    }
-
     async function getAudioBlobUrl() {
       if (audioBlobUrl) return audioBlobUrl;
       if (audioBlobPromise) return await audioBlobPromise;
@@ -2091,26 +1983,17 @@
       const manual = !!(opts && opts.manual);
       const shadowRepeat = !!(opts && opts.shadowRepeat);
       const prevIdx = idx;
-      console.log('[循环调试] playSegment调用', {
-        idx: i,
-        manual,
-        currentIdx: idx,
-        loopReplayPending,
-        paused: audio.paused
-      });
 
       if (i < 0 || i >= items.length) return;
       const mySeq = ++playSeq;
 
       // 手动操作时清除循环等待标志
       if (manual && loopReplayPending) {
-        console.log('[循环调试] 手动操作，清除循环等待标志');
         loopReplayPending = false;
       }
 
       // 自动流程：同句且已在播不重复
       if (!manual && idx === i && !audio.paused) {
-        console.log('[循环调试] 自动流程跳过：同句且正在播放');
         return;
       }
 
@@ -2210,7 +2093,6 @@
     function prefersReducedMotion() {
       try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; }
     }
-    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
     function getScrollY() { return window.scrollY || document.documentElement.scrollTop || 0; }
     function maxScrollY() {
       const doc = document.documentElement;
@@ -2471,12 +2353,6 @@
 
     // 播放/暂停
     audio.addEventListener('pause', () => {
-      console.log('[循环调试] audio.pause事件触发', {
-        internalPause,
-        loopReplayPending,
-        idx,
-        currentTime: audio.currentTime
-      });
       const keepShadowGap = shadowAutoPause;
       clearAdvance(); isScheduling = false; scheduleTime = 0;
       if (!keepShadowGap) clearShadowGapTimer();
@@ -2486,11 +2362,6 @@
       if (scrollTimer) { clearTimeout(scrollTimer); scrollTimer = 0; }
     });
     audio.addEventListener('play', () => {
-      console.log('[循环调试] audio.play事件触发', {
-        idx,
-        loopReplayPending,
-        currentTime: audio.currentTime
-      });
       setTimeout(() => scheduleAdvance(), 50);
       touchRecent();
       internalPause = false;
@@ -2683,7 +2554,6 @@
       const deepLinkLine = parseInt(queryParams.line, 10);
       let deepLinkHandled = false;
       if (!isNaN(deepLinkLine) && deepLinkLine >= 0 && deepLinkLine < items.length) {
-        console.log('[DeepLink] Jumping to line:', deepLinkLine);
         idx = deepLinkLine;
         segmentEnd = endFor(items[idx]);
         deepLinkHandled = true;
@@ -2711,7 +2581,6 @@
             if (skipIntro && targetIdx < firstContentIndex) {
               targetIdx = firstContentIndex;
               targetTime = items[firstContentIndex].start || 0;
-              console.log(`[跳过开头] 断点恢复：保存的位置 ${pos.idx} 在跳过区域内，从索引 ${firstContentIndex}（时间 ${targetTime}s）开始播放`);
             }
             if (readMode === 'shadow' && targetIdx < shadowStartIndex) {
               targetIdx = shadowStartIndex;

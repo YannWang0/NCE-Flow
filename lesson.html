@@ -20,6 +20,7 @@
       y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
     })(window, document, "clarity", "script", "tvjv632zgs");
   </script>
+  <script src="assets/utils.js" defer></script>
   <script src="assets/app.js" defer></script>
   <script src="assets/lesson.js" defer></script>
 
@@ -132,9 +133,9 @@
         </a>
         <div class="seg-wrap">
           <div id="langTabs" class="segmented tabs" role="tablist" aria-label="语言">
-            <button class="seg" data-mode="en">EN</button>
-            <button class="seg" data-mode="bi">EN+CN</button>
-            <button class="seg" data-mode="cn">CN</button>
+            <button class="seg" data-mode="en" aria-label="英文">EN</button>
+            <button class="seg" data-mode="bi" aria-label="双语">EN+CN</button>
+            <button class="seg" data-mode="cn" aria-label="中文">CN</button>
           </div>
         </div>
         <div class="topbar-actions">
@@ -154,6 +155,7 @@
       </div>
     </div>
     <main class="sentences" id="sentences"></main>
+    <div id="playerLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
     <div class="lesson-nav">
       <a id="prevLesson" class="btn-nav prev" href="#">上一课</a>
       <a id="nextLesson" class="btn-nav next" href="#">下一课</a>
@@ -313,9 +315,9 @@
           <div class="config-row">
             <span class="label">循环次数</span>
             <div class="stepper">
-              <button id="shadowDec" class="stepper-btn">−</button>
-              <input id="shadowRepeat" class="stepper-input" type="number" value="2" readonly>
-              <button id="shadowInc" class="stepper-btn">+</button>
+              <button id="shadowDec" class="stepper-btn" aria-label="减少循环次数">−</button>
+              <input id="shadowRepeat" class="stepper-input" type="number" value="2" readonly aria-label="循环次数">
+              <button id="shadowInc" class="stepper-btn" aria-label="增加循环次数">+</button>
             </div>
           </div>
           <div class="config-row border-top">
@@ -353,12 +355,23 @@
             </div>
             <!-- Custom Segmented Control for Speed -->
             <div class="segmented-control speed-segments">
-              <button class="seg-btn" data-rate="0.8">0.8</button>
-              <button class="seg-btn active" data-rate="1.0">1.0</button>
-              <button class="seg-btn" data-rate="1.2">1.2</button>
-              <button class="seg-btn" data-rate="1.5">1.5</button>
+              <button class="seg-btn" data-rate="0.8" aria-label="0.8倍速">0.8</button>
+              <button class="seg-btn active" data-rate="1.0" aria-label="1.0倍速">1.0</button>
+              <button class="seg-btn" data-rate="1.2" aria-label="1.2倍速">1.2</button>
+              <button class="seg-btn" data-rate="1.5" aria-label="1.5倍速">1.5</button>
+              <button class="seg-btn" data-rate="2.0" aria-label="2.0倍速">2.0</button>
+              <button class="seg-btn" data-rate="2.5" aria-label="2.5倍速">2.5</button>
               <!-- Hidden original button for compatibility if needed, or remove completely -->
               <button id="speed" hidden>Legacy</button>
+            </div>
+            <div class="speed-custom-row">
+              <label class="speed-custom-label" for="speedCustomInput">手动</label>
+              <div class="speed-custom-field">
+                <input id="speedCustomInput" class="speed-custom-input" type="number" min="0.5" max="2.5" step="0.05"
+                  inputmode="decimal" aria-label="手动设置播放速度">
+                <span class="speed-custom-unit">x</span>
+              </div>
+              <span class="speed-custom-hint">0.5 - 2.5</span>
             </div>
           </div>
 
@@ -437,7 +450,7 @@
 
       <!-- Bottom Actions -->
       <div class="setting-section action-section">
-        <button id="shortcutsToggle" class="action-btn">
+        <button id="shortcutsToggle" class="action-btn" aria-label="查看键盘快捷键">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z">
@@ -539,10 +552,10 @@
           <div class="config-row">
             <span class="label">持续播放</span>
             <div class="stepper">
-              <button id="autoStopDecSync" class="stepper-btn">−</button>
+              <button id="autoStopDecSync" class="stepper-btn" aria-label="减少课数">−</button>
               <input id="autoStopCount" class="stepper-input" type="number" min="1" max="50" value="3"
                 aria-label="连续播放课数">
-              <button id="autoStopIncSync" class="stepper-btn">+</button>
+              <button id="autoStopIncSync" class="stepper-btn" aria-label="增加课数">+</button>
             </div>
             <span class="label" style="font-size: 13px; color: var(--muted); margin-left: 4px;">课</span>
           </div>
@@ -606,7 +619,7 @@
       <span class="pwa-prompt-sub" id="pwaPromptSub">添加到主屏幕，随时学习</span>
     </div>
     <button id="pwaInstall" class="pwa-prompt-btn">安装</button>
-    <span id="pwaClose" class="pwa-prompt-close">×</span>
+    <button id="pwaClose" class="pwa-prompt-close" type="button" aria-label="关闭安装提示" tabindex="0">×</button>
   </div>
   <!-- Back to top -->
   <button id="backToTop" class="back-to-top" type="button" aria-label="回到顶端" title="回到顶端">

@@ -13,6 +13,7 @@ const PRECACHE_ASSETS = [
   '/favorites.html',
   '/book.html',
   '/assets/styles.css',
+  '/assets/utils.js',
   '/assets/lesson.js',
   '/assets/app.js',
   '/assets/favorites.js',
@@ -28,7 +29,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] 预缓存核心资源');
         const requests = PRECACHE_ASSETS.map((url) => new Request(url, { cache: 'reload' }));
         return cache.addAll(requests);
       })
@@ -44,7 +44,6 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((name) => name !== CACHE_NAME)
           .map((name) => {
-            console.log('[SW] 删除旧缓存:', name);
             return caches.delete(name);
           })
       );

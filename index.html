@@ -24,6 +24,7 @@
   </script>
   <!--  Microsoft Clarity 代码结束 -->
 
+  <script src="assets/utils.js" defer></script>
   <script src="assets/app.js" defer></script>
   <script src="assets/search.js" defer></script>
 
@@ -312,7 +313,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input type="text" id="searchInput" placeholder="搜索句子、单词或课文..." autocomplete="off">
-            <button id="searchClear" class="search-clear" hidden>×</button>
+            <button id="searchClear" class="search-clear" aria-label="清除搜索" hidden>×</button>
           </div>
           <button id="searchClose" class="search-cancel">取消</button>
         </div>
@@ -333,6 +334,7 @@
         </div>
       </div>
     </div>
+    <div id="searchLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
     <main class="lessons" id="lessons">
       <section class="section last-seen-section" id="lastSeenWrap" style="display:none">
         <div id="lastSeen"></div>
@@ -535,7 +537,7 @@
       <span class="pwa-prompt-sub" id="pwaPromptSub">添加到主屏幕，随时学习</span>
     </div>
     <button id="pwaInstall" class="pwa-prompt-btn">安装</button>
-    <span id="pwaClose" class="pwa-prompt-close">×</span>
+    <button id="pwaClose" class="pwa-prompt-close" type="button" aria-label="关闭安装提示" tabindex="0">×</button>
   </div>
   <script>
     (function () {

@@ -3,6 +3,8 @@
  * Implements global search with lazy loading index and client-side filtering.
  */
 (() => {
+    const { escapeRegExp, highlightText } = NCEUtils;
+
     const SEARCH_INDEX_URL = 'static/search_index.json';
     let searchIndex = null;
     let isLoading = false;
@@ -131,16 +133,6 @@
             }
         }
         return matches;
-    }
-
-    function highlightText(text, query) {
-        if (!query) return text;
-        const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
-        return text.replace(regex, '<span class="search-highlight">$1</span>');
-    }
-
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     function renderResults(results, query) {

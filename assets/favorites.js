@@ -1,4 +1,9 @@
 (() => {
+  const {
+    escapeHTML, clampRate, normalizeLoop, rateLabel, loopLabel,
+    isNoveltyVoiceName, voiceScore, NOVELTY_VOICE_RE, PREFERRED_VOICE_NAMES
+  } = NCEUtils;
+
   const SENTENCE_FAV_KEY = 'nce_sentence_favs_v1';
   const TTS_RATE_KEY = 'nce_tts_rate';
   const TTS_LOOP_KEY = 'nce_tts_loop'; // 'off' | 'one' | 'all'
@@ -9,11 +14,6 @@
     return typeof window !== 'undefined'
       && 'speechSynthesis' in window
       && typeof window.SpeechSynthesisUtterance === 'function';
-  }
-  function escapeHTML(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (ch) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[ch]);
   }
 
   function loadFavs() {
@@ -129,23 +129,6 @@
       setTimeout(()=>{ n.style.animation='slideUp 0.3s ease-out'; setTimeout(()=>{ document.body.removeChild(n); },300); },2000);
     }
 
-    function clampRate(v) {
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 1.0;
-      return Math.max(0.5, Math.min(2.5, n));
-    }
-    function normalizeLoop(v) {
-      return (v === 'off' || v === 'one' || v === 'all') ? v : 'off';
-    }
-    function rateLabel(r) {
-      const s = (Math.round(r * 100) % 25 === 0) ? String(r) : r.toFixed(2);
-      return `${s}x`;
-    }
-    function loopLabel(mode) {
-      if (mode === 'one') return '循环：单句';
-      if (mode === 'all') return '循环：全清单';
-      return '循环：关';
-    }
     function setPlayIcon(isPlaying) {
       const playIcon = ttsPlayPause?.querySelector('.play-icon');
       const pauseIcon = ttsPlayPause?.querySelector('.pause-icon');
@@ -156,45 +139,6 @@
     function setTtsState(state) {
       ttsState = state;
       setPlayIcon(ttsState === 'playing');
-    }
-
-    const NOVELTY_VOICE_RE = /\b(bad news|good news|bahh|bells|boing|bubbles|cellos|jester|junior|whisper|trinoids?)\b/i;
-    const PREFERRED_VOICE_NAMES = [
-      'Siri',
-      'Samantha',
-      'Alex',
-      'Daniel',
-      'Karen',
-      'Tessa',
-      'Moira',
-      'Oliver',
-      'Arthur',
-      'Aaron',
-      'Allison',
-      'Ava'
-    ];
-    function isNoveltyVoiceName(name) {
-      const n = String(name || '').trim();
-      if (!n) return false;
-      return NOVELTY_VOICE_RE.test(n);
-    }
-    function preferredVoiceBonus(name) {
-      const n = String(name || '');
-      const idx = PREFERRED_VOICE_NAMES.findIndex(k => k && (n === k || n.startsWith(k + ' ')));
-      return idx >= 0 ? (220 - idx * 10) : 0;
-    }
-    function voiceScore(v, { preferredLangPrefix = 'en' } = {}) {
-      if (!v) return -1e9;
-      const name = String(v.name || '');
-      const lang = String(v.lang || '').toLowerCase();
-      let s = 0;
-      if (lang.startsWith(preferredLangPrefix)) s += 120;
-      else if (preferredLangPrefix === 'en' && lang.startsWith('en')) s += 120;
-      if (v.localService) s += 30;
-      if (v.default) s += 20;
-      s += preferredVoiceBonus(name);
-      if (isNoveltyVoiceName(name)) s -= 1000;
-      return s;
     }
 
     function pickDefaultVoice(voices, { preferredLangPrefix = 'en' } = {}) {
