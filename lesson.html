@@ -448,6 +448,43 @@
 
       <!-- Section 4: Shadow Settings (Removed: Moved to Section 1) -->
 
+      <!-- Section: Data Management -->
+      <div class="setting-section">
+        <h3 class="section-title">数据管理</h3>
+        <div class="bento-card full-card">
+          <button id="dataExportBtn" class="data-mgmt-row" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <div class="data-mgmt-text">
+              <span class="data-mgmt-label">导出备份</span>
+              <span class="data-mgmt-desc">将收藏、进度和设置保存为 JSON 文件</span>
+            </div>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <div class="data-mgmt-divider"></div>
+          <button id="dataImportBtn" class="data-mgmt-row" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="data-mgmt-text">
+              <span class="data-mgmt-label">导入备份</span>
+              <span class="data-mgmt-desc">从 JSON 文件恢复数据（将覆盖当前数据）</span>
+            </div>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+          <input type="file" id="dataImportFile" accept=".json" hidden>
+        </div>
+      </div>
+
       <!-- Bottom Actions -->
       <div class="setting-section action-section">
         <button id="shortcutsToggle" class="action-btn" aria-label="查看键盘快捷键">
