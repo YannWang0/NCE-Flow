@@ -1065,32 +1065,9 @@ body.favorites-page .fav-item.active .sentence-fav-btn {
     font-size: 11px;
   }
 
-  /* 播完后选项：2x2网格布局 */
+  /* 播完后在新版设置中使用 select，旧兼容 radios 保持隐藏 */
   #afterPlayCard {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 4px;
-    padding: 4px;
-    width: 100%;
-    flex-wrap: nowrap;
-  }
-
-  #afterPlayCard .auto-continue-option {
-    width: 100%;
-    display: flex;
-  }
-
-  #afterPlayCard .auto-continue-option label {
-    width: 100%;
-    text-align: center;
-    padding: 8px 6px;
-    font-size: 12px;
-  }
-
-  /* 播完后的settings-group垂直居中 */
-  .settings-group:has(#afterPlayCard) {
-    align-items: center;
+    display: none !important;
   }
 }
 
