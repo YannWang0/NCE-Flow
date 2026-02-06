@@ -3,25 +3,29 @@
  * 缓存策略：核心文件缓存优先，音频网络优先
  */
 
-const CACHE_NAME = 'nce-flow-v1.7.9';
+const CACHE_NAME = 'nce-flow-v1.7.9-stability1';
 
 // 核心静态资源（预缓存）
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/lesson.html',
-  '/favorites.html',
-  '/book.html',
-  '/assets/styles.css',
-  '/assets/utils.js',
-  '/assets/lesson.js',
-  '/assets/app.js',
-  '/assets/favorites.js',
-  '/static/data.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/icons/apple-touch-icon.png',
-  '/icons/favicon.ico'
+  './',
+  './index.html',
+  './lesson.html',
+  './favorites.html',
+  './book.html',
+  './about.html',
+  './manifest.json',
+  './favicon.ico',
+  './assets/styles.css',
+  './assets/utils.js',
+  './assets/lesson.js',
+  './assets/app.js',
+  './assets/favorites.js',
+  './assets/search.js',
+  './static/data.json',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon.ico'
 ];
 
 // 安装：预缓存核心资源

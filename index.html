@@ -137,9 +137,14 @@
       const segBooks = document.querySelectorAll('[data-book]');
       const FAV_KEY = 'nce_favs';
       const RECENT_KEY = 'nce_recents';
+      let lessonsData = null;
       const getBook = () => (location.hash.slice(1) || 'NCE1').replace(/[^\w\d]/g, '');
       function activeTab(book) { segBooks.forEach(b => b.classList.toggle('active', b.dataset.book === book)); }
       async function load() {
+        if (lessonsData) {
+          render(lessonsData);
+          return;
+        }
         try {
           const res = await fetch('static/data.json');
           if (!res.ok) {
@@ -147,8 +152,8 @@
             document.getElementById('lessons').innerHTML = '<div style="color: red; padding: 20px;">加载课程数据失败，请检查 static/data.json 文件</div>';
             return;
           }
-          const data = await res.json();
-          render(data);
+          lessonsData = await res.json();
+          render(lessonsData);
         } catch (error) {
           console.error('Error loading data:', error);
           document.getElementById('lessons').innerHTML = '<div style="color: red; padding: 20px;">网络错误或数据格式问题</div>';
@@ -246,11 +251,11 @@
         const favs = getFavs();
         if (favs.has(id)) favs.delete(id); else favs.add(id);
         saveFavs(favs);
-        (async () => {
-          const res = await fetch('static/data.json');
-          const data = await res.json();
-          render(data);
-        })();
+        if (lessonsData) {
+          render(lessonsData);
+          return;
+        }
+        load();
       };
       document.addEventListener('click', (e) => {
         const a = e.target.closest('#lastSeenLink');
@@ -460,7 +465,7 @@
     // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('sw.js')
           .then((reg) => {
             console.log('[PWA] Service Worker 注册成功');
             reg.update();

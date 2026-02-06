@@ -364,7 +364,7 @@
       </div>
 
       <div class="page-actions" style="margin-top: 48px;">
-        <a class="btn" href="/" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
+        <a class="btn" href="index.html#NCE1" style="padding: 10px 24px; font-weight: 500;">返回首页</a>
       </div>
     </main>
 
@@ -377,7 +377,7 @@
     // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('sw.js')
           .then((reg) => {
             reg.update();
             if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
