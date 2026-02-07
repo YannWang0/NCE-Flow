@@ -109,38 +109,22 @@
 <body class="favorites-page">
   <canvas id="bg-canvas"></canvas>
   <div class="container">
-    <header class="hero">
-      <h1 id="favTitle">清单</h1>
-      <p id="favSub" class="muted"></p>
-      <div class="seg-wrap">
-        <div class="segmented tabs" role="tablist" aria-label="册别">
-          <a class="seg" href="index.html#NCE1">第一册</a>
-          <a class="seg" href="index.html#NCE2">第二册</a>
-          <a class="seg" href="index.html#NCE3">第三册</a>
-          <a class="seg" href="index.html#NCE4">第四册</a>
-          <a class="seg active" href="favorites.html" aria-current="page">清单</a>
-        </div>
-      </div>
-    </header>
-
     <div class="toolbar">
       <div class="topbar-inner">
         <a id="backBtn" class="back-inline" href="index.html#NCE1" aria-label="返回">
           <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L4.47 8.53a1.25 1.25 0 0 1 0-1.77l4.25-4.25a.75.75 0 0 1 1.06 0Z"></path></svg>
           返回
         </a>
-        <div class="seg-wrap">
-          <div id="langTabs" class="segmented tabs" role="tablist" aria-label="语言">
-            <button class="seg" data-mode="en" aria-label="英文">EN</button>
-            <button class="seg" data-mode="bi" aria-label="双语">EN+CN</button>
-            <button class="seg" data-mode="cn" aria-label="中文">CN</button>
-          </div>
-        </div>
         <div class="topbar-actions">
           <button id="ttsSettingsBtn" class="back-inline" type="button" aria-label="设置" title="设置">设置</button>
         </div>
       </div>
     </div>
+
+    <header class="hero">
+      <h1 id="favTitle">清单</h1>
+      <p id="favSub" class="muted"></p>
+    </header>
 
     <main>
       <section class="sentences" id="favSentences"></section>
@@ -193,6 +177,20 @@
     <div class="settings-body">
       <div class="settings-group">
         <div class="settings-left">
+          <div class="settings-label">显示语言</div>
+          <div class="settings-desc">切换收藏句子的显示方式。</div>
+        </div>
+        <div class="settings-control">
+          <div id="langTabs" class="segmented-control lang-segments settings-segments" role="radiogroup" aria-label="显示语言">
+            <button class="seg-btn" data-mode="en" aria-label="仅英文">EN</button>
+            <button class="seg-btn" data-mode="bi" aria-label="中英双语">EN+CN</button>
+            <button class="seg-btn" data-mode="cn" aria-label="仅中文">CN</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-left">
           <div class="settings-label">循环模式</div>
           <div class="settings-desc">选择是否单句循环或循环整个清单。</div>
         </div>
@@ -232,34 +230,6 @@
         </div>
         <div class="settings-control">
           <button id="clearListBtn" class="back-inline" type="button" aria-label="清空清单" title="清空清单">清空清单</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AI Drawer (placeholder, default hidden) -->
-  <div id="aiOverlay" class="settings-overlay" hidden></div>
-  <div id="aiPanel" class="settings-panel modern-settings" role="dialog" aria-modal="true" aria-labelledby="aiTitle" hidden>
-    <div class="settings-header">
-      <h2 id="aiTitle">AI 助手</h2>
-      <button id="aiClose" class="icon-btn close-btn" aria-label="关闭" title="关闭">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 5 L15 15 M15 5 L5 15"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="settings-body">
-      <div class="settings-group full-width">
-        <div class="settings-header-row">
-          <div class="settings-label">当前句子</div>
-        </div>
-        <div id="aiCurrent" class="ai-current"></div>
-        <div class="ai-actions">
-          <button id="aiCopySentence" class="back-inline" type="button">复制句子</button>
-          <button id="aiCopyPrompt" class="back-inline" type="button">复制提示词</button>
-        </div>
-        <div class="settings-desc" style="margin-top:10px">
-          AI 功能后续可接入；目前提供一键复制句子/提示词，方便粘贴到你常用的 AI 工具。
         </div>
       </div>
     </div>

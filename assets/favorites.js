@@ -33,13 +33,6 @@
     const favSub = qs('#favSub');
     const listEl = qs('#favSentences');
 
-    const aiOverlay = qs('#aiOverlay');
-    const aiPanel = qs('#aiPanel');
-    const aiClose = qs('#aiClose');
-    const aiCurrent = qs('#aiCurrent');
-    const aiCopySentence = qs('#aiCopySentence');
-    const aiCopyPrompt = qs('#aiCopyPrompt');
-
     const ttsSettingsBtn = qs('#ttsSettingsBtn');
     const ttsPrev = qs('#ttsPrev');
     const ttsPlayPause = qs('#ttsPlayPause');
@@ -70,8 +63,7 @@
 
         const isPanelOpen = () => {
           const ttsOpen = ttsPanel && !ttsPanel.hasAttribute('hidden');
-          const aiOpen = aiPanel && !aiPanel.hasAttribute('hidden');
-          return ttsOpen || aiOpen;
+          return ttsOpen;
         };
 
         const show = () => {
@@ -299,7 +291,6 @@
                 </svg>
                 原文
               </button>
-              <button class="sentence-ai-btn" type="button" data-action="ai" data-i="${i}" aria-label="AI 助手" title="AI 助手">AI</button>
             </div>
             ${meta ? `<div class="fav-meta">${escapeHTML(meta)}</div>` : ''}
           </div>
@@ -326,7 +317,6 @@
       }
 
       updateTtsPos();
-      syncAiCurrent();
     }
 
     function removeById(id) {
@@ -341,7 +331,6 @@
       setSubtitle();
       renderList();
       updateTtsPos();
-      syncAiCurrent();
     }
 
     function jumpToSource(i) {
@@ -384,58 +373,6 @@
       }, 220);
     }
 
-    function currentSentenceText() {
-      const it = favs[currentIndex];
-      if (!it) return { en: '', cn: '' };
-      return { en: String(it.en || ''), cn: String(it.cn || '') };
-    }
-    function buildAiPrompt() {
-      const { en, cn } = currentSentenceText();
-      const parts = [
-        '你是英语老师。请对下面句子进行：',
-        '1) 中文解释',
-        '2) 语法点拆解',
-        '3) 同义改写 3 个（保持原意）',
-        '4) 发音要点（重音/连读/语调）',
-        '',
-        `EN: ${en}`
-      ];
-      if (cn) parts.push(`CN: ${cn}`);
-      return parts.join('\n');
-    }
-    async function copyText(text) {
-      if (!text) return;
-      try {
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(text);
-          return;
-        }
-      } catch (_) {}
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', 'readonly');
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch (_) {}
-      document.body.removeChild(ta);
-    }
-    function syncAiCurrent() {
-      if (!aiCurrent) return;
-      const it = favs[currentIndex];
-      if (!it) {
-        aiCurrent.innerHTML = `<div class="muted">请选择一句已收藏的句子。</div>`;
-        return;
-      }
-      const meta = it.title || it.lessonId || '';
-      aiCurrent.innerHTML = `
-        <div class="en">${escapeHTML(it.en)}</div>
-        ${it.cn ? `<div class="cn">${escapeHTML(it.cn)}</div>` : ''}
-        ${meta ? `<div class="fav-meta">${escapeHTML(meta)}</div>` : ''}
-      `;
-    }
-
     // Init
     try { ttsRate = clampRate(localStorage.getItem(TTS_RATE_KEY)); } catch (_) { ttsRate = 1.0; }
     try { ttsLoop = normalizeLoop(localStorage.getItem(TTS_LOOP_KEY)); } catch (_) { ttsLoop = 'off'; }
@@ -462,7 +399,6 @@
     setSubtitle();
     renderList();
     updateTtsPos();
-    syncAiCurrent();
     if (window.NCE_APP && typeof NCE_APP.initSegmented === 'function') {
       try { NCE_APP.initSegmented(document); } catch (_) {}
     }
@@ -494,7 +430,6 @@
         setSubtitle();
         renderList();
         updateTtsPos();
-        syncAiCurrent();
         closePanel(ttsOverlay, ttsPanel);
       });
     }
@@ -518,14 +453,6 @@
           e.stopPropagation();
           const i = parseInt(actionBtn.dataset.i, 10);
           if (Number.isFinite(i)) jumpToSource(i);
-          return;
-        }
-        if (action === 'ai') {
-          e.preventDefault();
-          e.stopPropagation();
-          const i = parseInt(actionBtn.dataset.i, 10);
-          if (Number.isFinite(i)) setCurrent(i, { scroll: true });
-          openPanel(aiOverlay, aiPanel);
           return;
         }
       }
@@ -587,19 +514,6 @@
       ttsVoice = (ttsVoices || []).find(v => v && v.name === ttsVoiceName) || null;
       if (ttsState === 'playing' || ttsState === 'paused') speakIndex(currentIndex, { scroll: true });
       showNotification('已切换音色');
-    });
-
-    if (aiOverlay) aiOverlay.addEventListener('click', () => closePanel(aiOverlay, aiPanel));
-    if (aiClose) aiClose.addEventListener('click', () => closePanel(aiOverlay, aiPanel));
-    if (aiCopySentence) aiCopySentence.addEventListener('click', async () => {
-      const { en, cn } = currentSentenceText();
-      const text = [en, cn].filter(Boolean).join('\n');
-      await copyText(text);
-      showNotification('已复制句子');
-    });
-    if (aiCopyPrompt) aiCopyPrompt.addEventListener('click', async () => {
-      await copyText(buildAiPrompt());
-      showNotification('已复制提示词');
     });
 
     window.addEventListener('pagehide', () => { if (ttsState !== 'stopped') stopTts(); });
