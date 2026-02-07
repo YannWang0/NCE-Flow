@@ -2109,6 +2109,7 @@ body,
   transform: translate(-50%, -50%) scale(0.96);
   width: min(92vw, 480px);
   max-height: min(85vh, 720px);
+  max-height: min(85dvh, 720px);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -2124,6 +2125,14 @@ body,
 .modern-settings.show {
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .modern-settings {
+    width: min(94vw, 460px);
+    max-height: min(78dvh, 680px);
+    border-radius: 18px;
+  }
 }
 
 .settings-overlay.show {
@@ -3016,7 +3025,8 @@ input:checked+.slider:before {
 
 /* Shortcuts Help Panel */
 .shortcuts-panel {
-  max-height: min(90vh, 720px)
+  max-height: min(90vh, 720px);
+  max-height: min(90dvh, 720px)
 }
 
 .shortcuts-group {
