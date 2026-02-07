@@ -3492,6 +3492,12 @@ input:checked+.slider:before {
     right: 16px;
     top: calc(env(safe-area-inset-top, 0px) + 16px);
   }
+
+  /* Lesson/Favorites have a top toolbar; move floating buttons down to avoid overlap. */
+  body.lesson-page .header-actions,
+  body.favorites-page .header-actions {
+    top: calc(env(safe-area-inset-top, 0px) + 60px);
+  }
 }
 
 .icon-btn.search-trigger,
