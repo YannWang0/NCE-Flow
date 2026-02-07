@@ -1704,6 +1704,7 @@
         saveAutoStopSettings({ enabled: false, count: 3 });
         reflectAutoStopSettings();
         reflectReadMode(); reflectFollowMode(); reflectAfterPlay(); reflectSkipIntro(); reflectShadowSettings();
+        if (window.NCE_APP) { NCE_APP.setLang('bi'); const segs = document.querySelectorAll('#langTabs [data-mode]'); segs.forEach(b => b.classList.toggle('active', b.dataset.mode === 'bi')); }
         showNotification('已恢复默认设置');
       });
     }

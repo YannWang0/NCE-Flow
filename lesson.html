@@ -117,10 +117,6 @@
 <body class="lesson-page">
   <canvas id="bg-canvas"></canvas>
   <div class="container">
-    <header class="hero">
-      <h1 id="lessonTitle">课文</h1>
-      <p id="lessonSub" class="muted"></p>
-    </header>
     <div class="toolbar">
       <div class="topbar-inner">
         <a id="backLink" class="back-inline" href="#" aria-label="首页">
@@ -131,13 +127,6 @@
           </svg>
           首页
         </a>
-        <div class="seg-wrap">
-          <div id="langTabs" class="segmented tabs" role="tablist" aria-label="语言">
-            <button class="seg" data-mode="en" aria-label="英文">EN</button>
-            <button class="seg" data-mode="bi" aria-label="双语">EN+CN</button>
-            <button class="seg" data-mode="cn" aria-label="中文">CN</button>
-          </div>
-        </div>
         <div class="topbar-actions">
           <button id="settingsBtn" class="back-inline" aria-label="设置" title="设置">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor"
@@ -154,6 +143,10 @@
         </div>
       </div>
     </div>
+    <header class="hero">
+      <h1 id="lessonTitle">课文</h1>
+      <p id="lessonSub" class="muted"></p>
+    </header>
     <main class="sentences" id="sentences"></main>
     <div id="playerLiveRegion" class="sr-only" aria-live="polite" role="status"></div>
     <div class="lesson-nav">
@@ -305,6 +298,18 @@
                 </svg></div>
             </div>
           </label>
+        </div>
+      </div>
+
+      <!-- Section: Subtitle Language -->
+      <div class="setting-section">
+        <h3 class="section-title">字幕语言</h3>
+        <div class="bento-card full-card">
+          <div id="langTabs" class="segmented-control lang-segments" role="radiogroup" aria-label="字幕语言">
+            <button class="seg-btn" data-mode="en" aria-label="仅英文">EN</button>
+            <button class="seg-btn" data-mode="bi" aria-label="中英双语">EN+CN</button>
+            <button class="seg-btn" data-mode="cn" aria-label="仅中文">CN</button>
+          </div>
         </div>
       </div>
 
